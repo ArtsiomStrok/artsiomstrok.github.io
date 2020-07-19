@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <title>CS 498: Narrative visualization project</title>
+    <style>
+        @import url(//fonts.googleapis.com/css?family=Open+Sans:400,700);
+
+        #svg-container{
+            position: relative;
+        }
+
+        svg {
+            font: 14px 'Open Sans';
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+
+        .axis text {
+            fill: #000;
+        }
+
+        .axis .tick line {
+            stroke: rgba(0, 0, 0, 0.1);
+        }
+
+        .area {
+            stroke-width: 1;
+        }
+
+        .area.outer,
+        .legend .outer {
+            fill: rgba(230, 230, 255, 0.8);
+            stroke: rgba(216, 216, 255, 0.8);
+        }
+
+        .area.inner,
+        .legend .inner {
+            fill: rgba(127, 127, 255, 0.8);
+            stroke: rgba(96, 96, 255, 0.8);
+        }
+
+        .median-line,
+        .legend .median-line {
+            fill: none;
+            stroke: #000;
+            stroke-width: 3;
+        }
+
+        .legend .legend-bg {
+            fill: rgba(0, 0, 0, 0.5);
+            stroke: rgba(0, 0, 0, 0.5);
+        }
+
+        .marker.client .marker-bg,
+        .marker.client path {
+            fill: rgba(255, 127, 0, 0.8);
+            stroke: rgba(255, 127, 0, 0.8);
+            stroke-width: 3;
+        }
+
+        .marker.server .marker-bg,
+        .marker.server path {
+            fill: rgba(0, 153, 51, 0.8);
+            stroke: rgba(0, 153, 51, 0.8);
+            stroke-width: 3;
+        }
+
+        .marker path {
+            fill: none;
+        }
+
+        .legend text,
+        .marker text {
+            fill: #fff;
+            font-weight: bold;
+        }
+
+        .marker text {
+            text-anchor: middle;
+        }
+
+        #tooltip {
+            position: absolute;
+            opacity: 0;
+            top: -12px;
+            left: 0;
+            padding: 0.6em 1em;
+            background: #fff;
+            /* text-align: center; */
+            /* border: 1px solid #ddd; */
+            box-shadow: 0 6px 8px rgba(52, 73, 94, .2), 0 1px 1px rgba(52, 73, 94, 0.1);
+            z-index: 10;
+            transition: all 0.2s ease-out;
+            pointer-events: none;
+        }
+
+        #tooltip:before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-top-color: transparent;
+            border-left-color: transparent;
+            transform: translate(-50%, 50%) rotate(45deg);
+            transform-origin: center center;
+            z-index: 10;
+        }
+
+        #tooltip-date {
+            margin-bottom: 0.2em;
+            font-weight: 600;
+        }
+
+        rect:hover {
+            fill: #22a6b3;
+        }
+    </style>
+    <script src='https://d3js.org/d3.v5.min.js'></script>
+</head>
+<body>
+<div id='title'>
+    <h1>COVID-19 Daily Cases in New York</h1>
+</div>
+<div id='svg-container'>
+    <div id="tooltip" class="tooltip">
+        <div id="tooltip-date"></div>
+        <div id="tooltip-cases"></div>
+        <div id="tooltip-hospitalized"></div>
+        <div id="tooltip-deaths"></div>
+    </div>
+</div>
+
+<div id='notes'>
+    <h3>Notes:</h3>
+    <p>Please see accompanying code for details.</p>
+</div>
+
+<script>
+
+    const parseDate = d3.timeParse('%m/%d/%Y %H:%M:%S %p');
+    const markers = [
+        {
+            'date': parseDate("02/29/2020 12:00:00 AM"),
+            'label': "Testing is started",
+            'text': "After speaking with Vice President Pence, New York State’s Coronavirus test is approved by the FDA and testing is begun immediately at Wadsworth Lab in Albany."
+
+        },
+        {
+            'date': parseDate("03/01/2020 12:00:00 AM"),
+            'label': "First coronavirus case",
+            'text': "The first patient tests positive for coronavirus in New York after traveling abroad in Iran."
+
+        },
+        {
+            'date': parseDate("03/04/2020 12:00:00 AM"),
+            'label': "Study abroad programs canceled",
+            'text': "Study abroad programs at SUNY and CUNY schools to China, Italy and other impacted counties are canceled."
+
+        },
+        {
+            'date': parseDate("03/07/2020 12:00:00 AM"),
+            'label': "State of Emergency declared",
+            'text': "Gov. Andrew Cuomo declares a State of Emergency. This declaration allows, among other things, expedited procurement of essential hygiene, testing and medical supplies and expands the field of professionals permitted to conduct testing."
+
+        },
+        {
+            'date': parseDate("03/18/2020 12:00:00 AM"),
+            'label': "Workforce density 50%",
+            'text': "Workforce density 50%"
+
+        },
+        {
+            'date': parseDate("03/19/2020 12:00:00 AM"),
+            'label': "Workforce density 25%",
+            'text': "Workforce density 25%"
+
+        },
+        {
+            'date': parseDate("03/22/2020 12:00:00 AM"),
+            'label': "Stay at home order",
+            'text': "Stay at home order"
+
+        },
+        {
+            'date': parseDate("06/08/2020 12:00:00 AM"),
+            'label': "Phase 1 reopening",
+            'text': "Phase 1 reopening"
+
+        },
+        {
+            'date': parseDate("06/22/2020 12:00:00 AM"),
+            'label': "Phase 2 reopening",
+            'text': "Phase 2 reopening"
+
+        },
+        {
+            'date': parseDate("07/06/2020 12:00:00 AM"),
+            'label': "Phase 3 reopening",
+            'text': "Phase 3 reopening"
+
+        },
+
+    ];
+
+    d3.csv('data/ny.csv')
+        .then(function (data) {
+            data.forEach(function (d) {
+                d['DATE_OF_INTEREST'] = parseDate(d['DATE_OF_INTEREST']);
+                d['CASE_COUNT'] = +d['CASE_COUNT'];
+                d['HOSPITALIZED_COUNT'] = +d['HOSPITALIZED_COUNT'];
+                d['DEATH_COUNT'] = +d['DEATH_COUNT'];
+            });
+            makeChart(data, markers)
+        })
+        .catch(function (error) {
+            // handle error
+        })
+
+
+    function makeChart(data, markers)
+    {
+        const svgWidth = 1728,
+            svgHeight = 972,
+            margin = {top: 20, right: 20, bottom: 70, left: 70},
+            chartWidth = svgWidth - margin.left - margin.right,
+            chartHeight = svgHeight - margin.top - margin.bottom,
+            barColor = 'steelblue';
+        const xScale = d3.scaleTime()
+                .range([0, chartWidth])
+                .domain(d3.extent(data, d => d['DATE_OF_INTEREST']))
+                .nice(d3.timeDay),
+            yScale = d3.scaleLinear().range([chartHeight, 0])
+                .domain([0, d3.max(data, d => d['CASE_COUNT'])]),
+            dateToIdx = d3.scaleTime()
+                .range([0, data.length])
+                .domain(d3.extent(data, d => d['DATE_OF_INTEREST']));
+        const xAxis = d3.axisBottom(xScale).ticks(d3.timeDay.every(1)),
+            yAxis = d3.axisLeft(yScale);
+        const svg = d3.select('#svg-container').append('svg')
+            .attr('width', svgWidth)
+            .attr('height', svgHeight)
+            .append('g')
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+        svg.append('g')
+            .selectAll('rect')
+            .data(data)
+            .enter()
+            .append('rect')
+            .attr('fill', barColor)
+            .attr("x", d => xScale(d['DATE_OF_INTEREST']))
+            .attr("width", chartWidth / data.length)
+            .attr("y", chartHeight)
+            .attr("height", 0)
+            .transition()
+            .duration(500)
+            .delay(function (d, i) {
+                return i * 150;
+            })
+            .attr("y", d => yScale(d['CASE_COUNT']))
+            .attr("height", d => chartHeight - yScale(d['CASE_COUNT']));
+
+        svg.selectAll("rect").on("mouseenter", onMouseEnter)
+            .on("mouseleave", onMouseLeave);
+
+        const tooltip = d3.select("#tooltip");
+        let timeFormat = d3.timeFormat("%B %d, %Y");
+
+        function onMouseEnter(datum) {
+            tooltip.select("#tooltip-date").text(timeFormat(datum['DATE_OF_INTEREST']));
+            tooltip.select("#tooltip-cases").text(['Number of cases:', datum['CASE_COUNT']].join(' '));
+            tooltip.select("#tooltip-hospitalized").text(['Number of hospitalized:', datum['HOSPITALIZED_COUNT']].join(' '));
+            tooltip.select("#tooltip-deaths").text(['Number of deaths:', datum['DEATH_COUNT']].join(' '));
+            const x = xScale(datum['DATE_OF_INTEREST']) + margin.left + (chartWidth / data.length) / 2
+            const y = yScale(datum['CASE_COUNT']) + margin.top
+            tooltip.style("transform", `translate(`
+                + `calc( -50% + ${x}px),`
+                + `calc(-100% + ${y}px)`
+                + `)`)
+            tooltip.style("opacity", 1);
+        }
+
+        function onMouseLeave() {
+            tooltip.style("opacity", 0)
+        }
+
+        const axes = svg.append('g');
+
+        axes.append('g')
+            .attr('class', 'x axis')
+            .attr('transform', 'translate(0,' + chartHeight + ')')
+            .call(xAxis)
+            .selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-.8em')
+            .attr('dy', '.15em')
+            .attr('transform', 'rotate(-90)');
+
+        axes.append('text')
+            .attr('transform',
+                'translate(' + (chartWidth / 2) + ' ,' +
+                (chartHeight + margin.top + 40) + ')')
+            .style('text-anchor', 'middle')
+            .text('Date');
+
+        axes.append('g')
+            .attr('class', 'y axis')
+            .call(yAxis);
+
+        axes.append('text')
+            .attr('transform', 'rotate(-90)')
+            .attr('y', 0 - margin.left)
+            .attr('x', 0 - (chartHeight / 2))
+            .attr('dy', '1em')
+            .style('text-anchor', 'middle')
+            .text('Number of Cases');
+        let markersG = svg.append('g')
+        markers.forEach(marker => {
+            addMarker(data, marker, markersG, chartHeight, xScale, yScale, dateToIdx)
+        });
+
+    }
+
+
+    function addMarker(data, marker, svg, chartHeight, x, y, dateToIdx) {
+        let markerIdx = dateToIdx(marker.date);
+        let radius = 32,
+            xPos = x(marker.date) - radius - 3,
+            yPosStart = chartHeight - radius - 3,
+            //yPosEnd = (marker.type === 'Client' ? 80 : 160) + radius - 3;
+            yPosEnd = radius - 10,
+            offset = 10;
+
+        let markerG = svg.append('g')
+            .attr('class', 'marker client')
+            .attr('transform', 'translate(' + xPos + ', ' + yPosStart + ')')
+            .attr('opacity', 0);
+
+
+        markerG.transition()
+            .duration(500)
+            .delay(markerIdx * 150)
+            .attr('transform', 'translate(' + xPos + ', ' + yPosEnd + ')')
+            .attr('opacity', 1);
+
+        markerG.append('path')
+            .attr('d', 'M' + (radius + offset) + ',' + (chartHeight - yPosStart) + 'L' + (radius + offset) + ',' + (chartHeight - yPosStart))
+            .transition()
+            .duration(500)
+            .delay(markerIdx * 150)
+            .attr('d', 'M' + (radius + offset) + ',' + (chartHeight - yPosEnd) + 'L' + (radius + offset) + ',' + (radius * 2));
+
+        markerG.append('circle')
+            .attr('class', 'marker-bg')
+            .attr('cx', (radius + offset))
+            .attr('cy', (radius + offset))
+            .attr('r', radius);
+
+        markerG.append('text')
+            .attr('x', (radius + offset))
+            .attr('y', (radius + offset) * 0.9)
+            .text(marker.label);
+
+    }
+
+</script>
+
+</body>
+</html>
