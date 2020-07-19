@@ -6,7 +6,7 @@
     <style>
         @import url(//fonts.googleapis.com/css?family=Open+Sans:400,700);
 
-        #svg-container{
+        #svg-container {
             position: relative;
         }
 
@@ -121,7 +121,7 @@
             font-weight: 600;
         }
 
-        rect:hover {
+        .bin:hover {
             fill: #22a6b3;
         }
     </style>
@@ -139,7 +139,7 @@
         <div id="tooltip-deaths"></div>
     </div>
 </div>
-
+<div id="brush"></div>
 <div id='notes'>
     <h3>Notes:</h3>
     <p>Please see accompanying code for details.</p>
@@ -227,13 +227,13 @@
         })
 
 
-    function makeChart(data, markers)
-    {
+    function makeChart(data, markers) {
         const svgWidth = 1728,
             svgHeight = 972,
-            margin = {top: 20, right: 20, bottom: 70, left: 70},
+            margin = {top: 120, right: 20, bottom: 70, left: 70},
             chartWidth = svgWidth - margin.left - margin.right,
             chartHeight = svgHeight - margin.top - margin.bottom,
+            focusHeight = 100,
             barColor = 'steelblue';
         const xScale = d3.scaleTime()
                 .range([0, chartWidth])
@@ -244,15 +244,18 @@
             dateToIdx = d3.scaleTime()
                 .range([0, data.length])
                 .domain(d3.extent(data, d => d['DATE_OF_INTEREST']));
-        const xAxis = d3.axisBottom(xScale).ticks(d3.timeDay.every(1)),
+        const xAxis = d3.axisBottom(xScale),
+            // .ticks(d3.timeDay.every(1)),
             yAxis = d3.axisLeft(yScale);
-        const svg = d3.select('#svg-container').append('svg')
+
+        let svg = d3.select('#svg-container').append('svg')
             .attr('width', svgWidth)
-            .attr('height', svgHeight)
+            .attr('height', svgHeight);
+        const chart = svg
             .append('g')
             .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-        svg.append('g')
+        chart.append('g')
             .selectAll('rect')
             .data(data)
             .enter()
@@ -262,6 +265,7 @@
             .attr("width", chartWidth / data.length)
             .attr("y", chartHeight)
             .attr("height", 0)
+            .classed("bin", 1)
             .transition()
             .duration(500)
             .delay(function (d, i) {
@@ -270,7 +274,8 @@
             .attr("y", d => yScale(d['CASE_COUNT']))
             .attr("height", d => chartHeight - yScale(d['CASE_COUNT']));
 
-        svg.selectAll("rect").on("mouseenter", onMouseEnter)
+        chart.selectAll(".bin")
+            .on("mouseenter", onMouseEnter)
             .on("mouseleave", onMouseLeave);
 
         const tooltip = d3.select("#tooltip");
@@ -294,7 +299,7 @@
             tooltip.style("opacity", 0)
         }
 
-        const axes = svg.append('g');
+        const axes = chart.append('g');
 
         axes.append('g')
             .attr('class', 'x axis')
@@ -324,10 +329,48 @@
             .attr('dy', '1em')
             .style('text-anchor', 'middle')
             .text('Number of Cases');
-        let markersG = svg.append('g')
+        let markersG = chart.append('g')
         markers.forEach(marker => {
             addMarker(data, marker, markersG, chartHeight, xScale, yScale, dateToIdx)
         });
+
+        let focusTopMargin = 20;
+
+        const brush = d3.brushX()
+            .extent([[0, 0], [chartWidth, focusHeight]])
+            .on("brush", brushed)
+            .on("end", brushended);
+
+        const defaultSelection = [xScale.range()[0], xScale(d3.timeMonth.offset(xScale.domain()[0], 1))];
+        let brushGroup = svg.append("g")
+            .attr('transform', 'translate(' + margin.left + ',' + focusTopMargin + ')');
+        brushGroup.call(d3.axisTop(xScale), xScale, focusHeight);
+
+        let yScaleFocus = yScale.copy().range([focusHeight, 0]);
+        brushGroup.append("path")
+            .datum(data)
+            .attr("fill", "steelblue")
+            .attr("d",
+                d3.line(xScale, yScaleFocus)
+                    .x(d => xScale(d['DATE_OF_INTEREST']))
+                    .y(d => yScaleFocus(d['CASE_COUNT'])));
+
+        const gb = brushGroup
+            .call(brush)
+            .call(brush.move, defaultSelection);
+
+        function brushed() {
+            if (d3.event.selection) {
+                svg.property("value", d3.event.selection.map(xScale.invert, xScale).map(d3.timeDay.round));
+                svg.dispatch("input");
+            }
+        }
+
+        function brushended() {
+            if (!d3.event.selection) {
+                gb.call(brush.move, defaultSelection);
+            }
+        }
 
     }
 
