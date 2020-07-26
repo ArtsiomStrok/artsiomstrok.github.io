@@ -126,6 +126,7 @@
         }
     </style>
     <script src='https://d3js.org/d3.v5.min.js'></script>
+    <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
 </head>
 <body>
 <div id='title'>
@@ -211,7 +212,7 @@
         },
 
     ];
-
+    var targetAttribute = 'CASE_COUNT';
     d3.csv('data/ny.csv')
         .then(function (data) {
             data.forEach(function (d) {
@@ -230,20 +231,23 @@
     function makeChart(data, markers) {
         const svgWidth = 1728,
             svgHeight = 972,
-            margin = {top: 120, right: 20, bottom: 70, left: 70},
+            margin = {top: 130, right: 20, bottom: 70, left: 70},
             chartWidth = svgWidth - margin.left - margin.right,
             chartHeight = svgHeight - margin.top - margin.bottom,
-            focusHeight = 100,
-            barColor = 'steelblue';
+            brushAreaHeight = 100,
+            barColor = 'steelblue',
+            totalAnimationTime = 20000;
         const xScale = d3.scaleTime()
                 .range([0, chartWidth])
                 .domain(d3.extent(data, d => d['DATE_OF_INTEREST']))
                 .nice(d3.timeDay),
             yScale = d3.scaleLinear().range([chartHeight, 0])
-                .domain([0, d3.max(data, d => d['CASE_COUNT'])]),
+                .domain([0, d3.max(data, d => d[targetAttribute])]),
             dateToIdx = d3.scaleTime()
                 .range([0, data.length])
-                .domain(d3.extent(data, d => d['DATE_OF_INTEREST']));
+                .domain(d3.extent(data, d => d['DATE_OF_INTEREST'])),
+            xScaleBrush = xScale.copy(),
+            yScaleBrush = yScale.copy().range([brushAreaHeight, 0]);
         const xAxis = d3.axisBottom(xScale),
             // .ticks(d3.timeDay.every(1)),
             yAxis = d3.axisLeft(yScale);
@@ -263,16 +267,7 @@
             .attr('fill', barColor)
             .attr("x", d => xScale(d['DATE_OF_INTEREST']))
             .attr("width", chartWidth / data.length)
-            .attr("y", chartHeight)
-            .attr("height", 0)
-            .classed("bin", 1)
-            .transition()
-            .duration(500)
-            .delay(function (d, i) {
-                return i * 150;
-            })
-            .attr("y", d => yScale(d['CASE_COUNT']))
-            .attr("height", d => chartHeight - yScale(d['CASE_COUNT']));
+            .classed("bin", 1);
 
         chart.selectAll(".bin")
             .on("mouseenter", onMouseEnter)
@@ -283,11 +278,11 @@
 
         function onMouseEnter(datum) {
             tooltip.select("#tooltip-date").text(timeFormat(datum['DATE_OF_INTEREST']));
-            tooltip.select("#tooltip-cases").text(['Number of cases:', datum['CASE_COUNT']].join(' '));
+            tooltip.select("#tooltip-cases").text(['Number of cases:', datum[targetAttribute]].join(' '));
             tooltip.select("#tooltip-hospitalized").text(['Number of hospitalized:', datum['HOSPITALIZED_COUNT']].join(' '));
             tooltip.select("#tooltip-deaths").text(['Number of deaths:', datum['DEATH_COUNT']].join(' '));
             const x = xScale(datum['DATE_OF_INTEREST']) + margin.left + (chartWidth / data.length) / 2
-            const y = yScale(datum['CASE_COUNT']) + margin.top
+            const y = yScale(datum[targetAttribute]) + margin.top
             tooltip.style("transform", `translate(`
                 + `calc( -50% + ${x}px),`
                 + `calc(-100% + ${y}px)`
@@ -334,35 +329,111 @@
             addMarker(data, marker, markersG, chartHeight, xScale, yScale, dateToIdx)
         });
 
+
+        const annotations = [
+            {
+                note: {
+                    label: "Here is the annotation label",
+                    title: "Annotation title"
+                },
+                connector: {
+                    end: "arrow",        // none, or arrow or dot
+                    type: "curve",       // Line or curve
+                    points: 3,           // Number of break in the curve
+                    lineType: "horizontal"
+                },
+                color: ["purple"],
+                x: 200,
+                y: 160,
+                dy: 70,
+                dx: 70
+            }
+        ]
+
+// Add annotation to the chart
+        const makeAnnotations = d3.annotation()
+            .annotations(annotations)
+
+        svg.append("g")
+            .attr('class', 'annotation-group')
+            .call(makeAnnotations)
+
+        d3.select('.annotation-group')
+            .transition()
+            .delay(1000)
+            .duration(3000)
+            .tween('updateAnno', function (d) {
+                return function (t) {
+                    annotations[0].x = t * 250;
+                    makeAnnotations.annotations(annotations)
+                    makeAnnotations.update()
+                }
+            })
+
+
         let focusTopMargin = 20;
 
         const brush = d3.brushX()
-            .extent([[0, 0], [chartWidth, focusHeight]])
+            .extent([[0, 0], [chartWidth, brushAreaHeight]])
             .on("brush", brushed)
             .on("end", brushended);
 
-        const defaultSelection = [xScale.range()[0], xScale(d3.timeMonth.offset(xScale.domain()[0], 1))];
+        const defaultSelection = [xScaleBrush.range()[0], xScaleBrush(d3.timeMonth.offset(xScale.domain()[0], 1))];
         let brushGroup = svg.append("g")
+            .attr("class", "brush")
             .attr('transform', 'translate(' + margin.left + ',' + focusTopMargin + ')');
-        brushGroup.call(d3.axisTop(xScale), xScale, focusHeight);
+        brushGroup.call(d3.axisTop(xScaleBrush), xScaleBrush, brushAreaHeight);
 
-        let yScaleFocus = yScale.copy().range([focusHeight, 0]);
         brushGroup.append("path")
             .datum(data)
             .attr("fill", "steelblue")
             .attr("d",
-                d3.line(xScale, yScaleFocus)
-                    .x(d => xScale(d['DATE_OF_INTEREST']))
-                    .y(d => yScaleFocus(d['CASE_COUNT'])));
+                d3.line(xScaleBrush, yScaleBrush)
+                    .x(d => xScaleBrush(d['DATE_OF_INTEREST']))
+                    .y(d => yScaleBrush(d[targetAttribute])));
 
         const gb = brushGroup
             .call(brush)
-            .call(brush.move, defaultSelection);
+            .call(brush.move, [xScaleBrush.range()[0], xScaleBrush(d3.timeDay.offset(xScale.domain()[0], 1))]);
+
+        brushGroup
+            .transition()
+            .duration(totalAnimationTime)
+            .call(brush.move, [xScaleBrush.range()[0], xScaleBrush.range()[1]]);
 
         function brushed() {
             if (d3.event.selection) {
-                svg.property("value", d3.event.selection.map(xScale.invert, xScale).map(d3.timeDay.round));
-                svg.dispatch("input");
+                let brushSelection = d3.event.selection.map(xScaleBrush.invert, xScaleBrush).map(d3.timeDay.round);
+                chart.property("value", brushSelection);
+                chart.dispatch("input");
+                xScale.domain(d3.event.selection === null ? xScaleBrush.domain() : brushSelection);
+                chart.select(".x.axis").call(xAxis);
+                let filteredData = data.filter(function (d) {
+                    return d['DATE_OF_INTEREST'] > brushSelection[0] & d['DATE_OF_INTEREST'] < brushSelection[1]
+                });
+
+                let u = chart.selectAll(".bin").data(filteredData);
+
+                u.enter()
+                    .append('rect')
+                    .merge(u)
+                    .attr('fill', barColor)
+                    .attr("x", d => xScale(d['DATE_OF_INTEREST']))
+                    .attr("width", chartWidth / filteredData.length)
+                    .attr("y", chartHeight)
+                    .attr("height", 0)
+                    .classed("bin", 1)
+                    .transition()
+                    .duration(100)
+                    .attr("y", d => yScale(d[targetAttribute]))
+                    .attr("height", d => chartHeight - yScale(d[targetAttribute]))
+
+                chart.selectAll(".bin")
+                    .on("mouseenter", onMouseEnter)
+                    .on("mouseleave", onMouseLeave);
+
+
+                u.exit().remove();
             }
         }
 
