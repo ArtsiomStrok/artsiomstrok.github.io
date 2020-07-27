@@ -11,11 +11,23 @@
         }
 
         #svg-container {
-            position: relative;
+            width: 100%;
+        }
+
+        .shadow {
+            -webkit-filter: drop-shadow(2px 2px 1px rgba(0, 0, 0, .3));
+            filter: drop-shadow(2px 2px 1px rgba(0, 0, 0, .3));
         }
 
         svg {
+            display: block;
+            margin: auto;
             font: 14px 'Open Sans';
+        }
+
+        #attribute-dropdown {
+            text-align: center;
+            padding-bottom: 20px;
         }
 
         .axis path,
@@ -128,14 +140,14 @@
         }
     </style>
     <script src='d3/d3.v5.min.js'></script>
-    <script src="d3/d3-annotation.min.js"></script>
+    <script src='d3/d3-annotation.min.js'></script>
 </head>
 <body>
 <div id='title'>
     <h1>History of COVID-19 in New York</h1>
-    <div id="start-animation" class="round-button">
-        <div class="round-button-circle">
-            <a onClick="startAnimation(); return false;" href="fallback.html" class="round-button">Start</a>
+    <div id='start-animation' class='round-button'>
+        <div class='round-button-circle'>
+            <a onClick='startAnimation(); return false;' href='fallback.html' class='round-button'>Start</a>
         </div>
     </div>
 
@@ -151,8 +163,48 @@
 </div>
 <div id='brush'></div>
 <div id='notes'>
+    <h3>Messaging</h3>
+    <p>This narrative visualization shows how different actions taken by the New York state affected the spread of coronavirus.</p>
+    <h3>Narrative Structure</h3>
+    <p>This narrative visualization follows martini glass structure. First, it shows the animation that
+        <b>TBD</b>
+        <br/>
+
+        Which structure was your narrative visualization designed to follow (martini glass,
+        interactive slide show or drop-down story)? How does your narrative visualization follow that structure? (All of
+        these structures can include the opportunity to 'drill-down' and explore. The difference is where that
+        opportunity
+        happens in the structure.)</p>
+    <h3>Visual Structure</h3>
+    <p>
+        <b>TBD</b>
+        <br/>
+        What visual structure is used for each scene? How does it ensure the viewer can understand
+        the data and navigate the scene? How does it highlight to urge the viewer to focus on the important parts of the
+        data in each scene? How does it help the viewer transition to other scenes, to understand how the data connects
+        to
+        the data in other scenes?</p>
+    <h3>Scenes</h3>
+    <p>There are three scenes in this narrative visualization.
+        The first author driven scene shows the daily cases count on the timeline and actions taken by New York state.
+        The rest of two scenes focused on daily hospitalized count and death count respectively and they are user
+        driven.</p>
+    <h3>Annotations</h3>
+    <p>All events and actions taken by New York states are annotated on the chart and appeared during animation.</p>
+    <h3>Parameters</h3>
+    <p>There are two parameters in the narrative visualization.
+        The first is type of statistics: case count, hospitalization count of deaths count.
+        The second is time interval.
+        The first scene is using the case count parameter and entire timeline available in the data.
+        The second and third scenes are using hospitalization count and death count respectively with enitre timeline by
+        default.</p>
+    <h3>Triggers</h3>
+    <p>There are three triggers available:
+        The dropdown menu to select the metric.
+        The timeline brush to select the time interval.
+        The tooltip with additional information when user hover cursor over the bar on the chart.</p>
     <h3>Notes:</h3>
-    <p>Please see accompanying code for details.</p>
+    <p>TBD</p>
 </div>
 
 <script>
@@ -234,7 +286,7 @@
 
     ];
     let startAnimation = function () {
-        d3.select("#start-animation").style("display", "none");
+        d3.select('#start-animation').style('display', 'none');
         d3.csv('data/ny.csv')
             .then(function (data) {
                 data.forEach(function (d) {
@@ -277,21 +329,22 @@
         let targetAttribute = 'CASE_COUNT';
         let barColor = 'steelblue';
 
+        let getColor = function (a) {
+            switch (a) {
+                case 'CASE_COUNT':
+                    return 'steelblue';
+                case 'HOSPITALIZED_COUNT':
+                    return 'orange';
+                case 'DEATH_COUNT':
+                    return 'orangered';
+                default:
+                    return 'steelblue';
+            }
+        }
+
         let dropdownChange = function () {
             targetAttribute = d3.select(this).property('value');
-            switch (targetAttribute) {
-                case 'CASE_COUNT':
-                    barColor = 'steelblue'
-                    break;
-                case 'HOSPITALIZED_COUNT':
-                    barColor = 'orange'
-                    break;
-                case 'DEATH_COUNT':
-                    barColor = 'orangered'
-                    break;
-                default:
-                    barColor = 'steelblue'
-            }
+            barColor = getColor(targetAttribute)
             yScale.domain([0, d3.max(data, d => d[targetAttribute])])
             axes.select('.y').transition().call(yAxis);
 
@@ -306,6 +359,9 @@
                         .x(d => xScaleBrush(d['DATE_OF_INTEREST']))
                         .y(d => yScaleBrush(d[targetAttribute])));
             updateBars(chart.property('value'), 1000)
+            
+            d3.select('.y-label').text(targetAttribute.replace('_', ' '));
+
         };
 
         let attributes = ['CASE_COUNT', 'HOSPITALIZED_COUNT', 'DEATH_COUNT'];
@@ -316,9 +372,13 @@
 
         dropdown.selectAll('option')
             .data(attributes)
-            .enter().append('option')
+            .enter()
+            .append('option')
             .attr('value', function (d) {
                 return d;
+            })
+            .attr('class', function (d) {
+                return d.replace('_', '-').toLowerCase();
             })
             .text(function (d) {
                 return d.replace('_', ' ').toLowerCase();
@@ -355,6 +415,7 @@
             yAxis = d3.axisLeft(yScale);
 
         let svg = d3.select('#svg-container').append('svg')
+            .attr('class', 'shadow')
             .attr('width', svgWidth)
             .attr('height', svgHeight);
         const chart = svg
@@ -386,6 +447,7 @@
             .call(yAxis);
 
         axes.append('text')
+            .attr('class', 'y-label')
             .attr('transform', 'rotate(-90)')
             .attr('y', 0 - margin.left)
             .attr('x', 0 - (chartHeight / 2))
@@ -480,7 +542,7 @@
                     'title': m.label
                 },
                 connector: {
-                    end: "dot"
+                    end: 'dot'
                 },
                 'x': xScale(m.date) + (chartWidth / filteredData.length) / 2,
                 'y': chartHeight,
@@ -489,10 +551,10 @@
                 'color': 'MediumVioletRed'
             }));
             if (annotations.length > 0) {
-                let makersGroup = chart.select(".markers");
+                let makersGroup = chart.select('.markers');
                 if (makersGroup.empty()) {
                     makeAnnotations.annotations(annotations)
-                    chart.append("g")
+                    chart.append('g')
                         .attr('class', 'markers')
                         .call(makeAnnotations)
                 } else {
@@ -526,8 +588,10 @@
             tooltip.select('#tooltip-cases').text(['Number of cases:', datum['CASE_COUNT']].join(' '));
             tooltip.select('#tooltip-hospitalized').text(['Number of hospitalized:', datum['HOSPITALIZED_COUNT']].join(' '));
             tooltip.select('#tooltip-deaths').text(['Number of deaths:', datum['DEATH_COUNT']].join(' '));
-            const x = xScale(datum['DATE_OF_INTEREST']) + margin.left + (chartWidth / data.length) / 2
-            const y = yScale(datum[targetAttribute]) + margin.top
+            const offset = d3.select('#svg-container svg').node().getBoundingClientRect(), left = offset.left,
+                top = offset.top;
+            const x = xScale(datum['DATE_OF_INTEREST']) + left + margin.left + (chartWidth / data.length) / 2
+            const y = yScale(datum[targetAttribute]) + top + margin.top
             tooltip.style('transform', `translate(`
                 + `calc( -50% + ${x}px),`
                 + `calc(-100% + ${y}px)`
