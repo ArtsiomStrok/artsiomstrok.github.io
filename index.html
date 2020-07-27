@@ -130,11 +130,11 @@
             stroke: darkblue;
             stroke-width: 2.5;
             z-index: 1000;
-            opacity : 0.5;
+            opacity: 0.5;
         }
     </style>
     <script src='https://d3js.org/d3.v5.min.js'></script>
-    <script src='https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js'></script>
+    <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
 </head>
 <body>
 <div id='title'>
@@ -160,63 +160,75 @@
     const parseDate = d3.timeParse('%m/%d/%Y %H:%M:%S %p');
     const markers = [
         {
-            'date': parseDate('02/29/2020 12:00:00 AM'),
-            'label': 'Testing is started',
-            'text': 'After speaking with Vice President Pence, New York State’s Coronavirus test is approved by the FDA and testing is begun immediately at Wadsworth Lab in Albany.'
-
-        },
-        {
             'date': parseDate('03/01/2020 12:00:00 AM'),
             'label': 'First coronavirus case',
-            'text': 'The first patient tests positive for coronavirus in New York after traveling abroad in Iran.'
+            'text': 'The first patient tests positive for coronavirus in New York after traveling abroad in Iran.',
+            'dx': 10,
+            'dy': 0.1
 
         },
         {
             'date': parseDate('03/04/2020 12:00:00 AM'),
             'label': 'Study abroad programs canceled',
-            'text': 'Study abroad programs at SUNY and CUNY schools to China, Italy and other impacted counties are canceled.'
+            'text': 'Study abroad programs at SUNY and CUNY schools to China, Italy and other impacted counties are canceled.',
+            'dx': 30,
+            'dy': 0.2
 
         },
         {
             'date': parseDate('03/07/2020 12:00:00 AM'),
             'label': 'State of Emergency declared',
-            'text': 'Gov. Andrew Cuomo declares a State of Emergency. This declaration allows, among other things, expedited procurement of essential hygiene, testing and medical supplies and expands the field of professionals permitted to conduct testing.'
+            'text': 'Gov. Andrew Cuomo declares a State of Emergency. This declaration allows, among other things, expedited procurement of essential hygiene, testing and medical supplies and expands the field of professionals permitted to conduct testing.',
+            'dx': 90,
+            'dy': 0.3
 
         },
         {
             'date': parseDate('03/18/2020 12:00:00 AM'),
             'label': 'Workforce density 50%',
-            'text': 'Workforce density 50%'
+            'text': 'Workforce density 50%',
+            'dx': 30,
+            'dy': 0.7
 
         },
         {
             'date': parseDate('03/19/2020 12:00:00 AM'),
             'label': 'Workforce density 25%',
-            'text': 'Workforce density 25%'
+            'text': 'Workforce density 25%',
+            'dx': 90,
+            'dy': 0.8
 
         },
         {
             'date': parseDate('03/22/2020 12:00:00 AM'),
             'label': 'Stay at home order',
-            'text': 'Stay at home order'
+            'text': 'Stay at home order',
+            'dx': 150,
+            'dy': 0.9
 
         },
         {
             'date': parseDate('06/08/2020 12:00:00 AM'),
             'label': 'Phase 1 reopening',
-            'text': 'Phase 1 reopening'
+            'text': 'Phase 1 reopening',
+            'dx': -10,
+            'dy': 0.2
 
         },
         {
             'date': parseDate('06/22/2020 12:00:00 AM'),
             'label': 'Phase 2 reopening',
-            'text': 'Phase 2 reopening'
+            'text': 'Phase 2 reopening',
+            'dx': -10,
+            'dy': 0.15
 
         },
         {
             'date': parseDate('07/06/2020 12:00:00 AM'),
             'label': 'Phase 3 reopening',
-            'text': 'Phase 3 reopening'
+            'text': 'Phase 3 reopening',
+            'dx': -10,
+            'dy': 0.1
 
         },
 
@@ -413,12 +425,13 @@
             .duration(totalAnimationTime)
             .call(brush.move, [xScaleBrush.range()[0], xScaleBrush.range()[1]]);
 
+        let makeAnnotations = d3.annotation();
+
         function updateBars(brushSelection, duration) {
             xScale.domain(d3.event.selection === null ? xScaleBrush.domain() : brushSelection);
             chart.select('.x.axis').call(xAxis);
-            let filteredData = data.filter(function (d) {
-                return d['DATE_OF_INTEREST'] > brushSelection[0] & d['DATE_OF_INTEREST'] < brushSelection[1]
-            });
+            let filteredData = data.filter(d => d['DATE_OF_INTEREST'] > brushSelection[0] & d['DATE_OF_INTEREST'] < brushSelection[1]);
+            let filteredMarkers = markers.filter(d => d['date'] > brushSelection[0] & d['date'] < brushSelection[1])
 
             let u = d3.select('.bars').selectAll('.bin').data(filteredData);
 
@@ -449,6 +462,34 @@
                     .x(d => xScale(d['DATE_OF_INTEREST']) + (chartWidth / filteredData.length) / 2)
                     .y(d => yScale(d[targetAttribute + '_SMOOTH']))
                 )
+
+            let annotations = filteredMarkers.map(m => ({
+                'note': {
+                    //'label': m.text,
+                    'title': m.label
+                },
+                connector: {
+                    end: "dot"
+                },
+                'x': xScale(m.date) + (chartWidth / filteredData.length) / 2,
+                'y': chartHeight,
+                'dy': -chartHeight * m.dy,
+                'dx': m.dx,
+                'color': 'MediumVioletRed'
+            }));
+            if (annotations.length > 0) {
+                let makersGroup = chart.select(".markers");
+                if (makersGroup.empty()) {
+                    makeAnnotations.annotations(annotations)
+                    chart.append("g")
+                        .attr('class', 'markers')
+                        .call(makeAnnotations)
+                } else {
+                    makeAnnotations.annotations(annotations);
+                    makeAnnotations.update()
+                }
+
+            }
         }
 
         function brushed() {
