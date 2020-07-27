@@ -124,24 +124,32 @@
         .bin:hover {
             fill: #22a6b3;
         }
+
+        .smooth-line {
+            fill: none;
+            stroke: darkblue;
+            stroke-width: 2.5;
+            z-index: 1000;
+            opacity : 0.5;
+        }
     </style>
     <script src='https://d3js.org/d3.v5.min.js'></script>
-    <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+    <script src='https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js'></script>
 </head>
 <body>
 <div id='title'>
     <h1>History of COVID-19 in New York</h1>
-    <div id="attribute-dropdown"></div>
+    <div id='attribute-dropdown'></div>
 </div>
 <div id='svg-container'>
-    <div id="tooltip" class="tooltip">
-        <div id="tooltip-date"></div>
-        <div id="tooltip-cases"></div>
-        <div id="tooltip-hospitalized"></div>
-        <div id="tooltip-deaths"></div>
+    <div id='tooltip' class='tooltip'>
+        <div id='tooltip-date'></div>
+        <div id='tooltip-cases'></div>
+        <div id='tooltip-hospitalized'></div>
+        <div id='tooltip-deaths'></div>
     </div>
 </div>
-<div id="brush"></div>
+<div id='brush'></div>
 <div id='notes'>
     <h3>Notes:</h3>
     <p>Please see accompanying code for details.</p>
@@ -152,63 +160,63 @@
     const parseDate = d3.timeParse('%m/%d/%Y %H:%M:%S %p');
     const markers = [
         {
-            'date': parseDate("02/29/2020 12:00:00 AM"),
-            'label': "Testing is started",
-            'text': "After speaking with Vice President Pence, New York State’s Coronavirus test is approved by the FDA and testing is begun immediately at Wadsworth Lab in Albany."
+            'date': parseDate('02/29/2020 12:00:00 AM'),
+            'label': 'Testing is started',
+            'text': 'After speaking with Vice President Pence, New York State’s Coronavirus test is approved by the FDA and testing is begun immediately at Wadsworth Lab in Albany.'
 
         },
         {
-            'date': parseDate("03/01/2020 12:00:00 AM"),
-            'label': "First coronavirus case",
-            'text': "The first patient tests positive for coronavirus in New York after traveling abroad in Iran."
+            'date': parseDate('03/01/2020 12:00:00 AM'),
+            'label': 'First coronavirus case',
+            'text': 'The first patient tests positive for coronavirus in New York after traveling abroad in Iran.'
 
         },
         {
-            'date': parseDate("03/04/2020 12:00:00 AM"),
-            'label': "Study abroad programs canceled",
-            'text': "Study abroad programs at SUNY and CUNY schools to China, Italy and other impacted counties are canceled."
+            'date': parseDate('03/04/2020 12:00:00 AM'),
+            'label': 'Study abroad programs canceled',
+            'text': 'Study abroad programs at SUNY and CUNY schools to China, Italy and other impacted counties are canceled.'
 
         },
         {
-            'date': parseDate("03/07/2020 12:00:00 AM"),
-            'label': "State of Emergency declared",
-            'text': "Gov. Andrew Cuomo declares a State of Emergency. This declaration allows, among other things, expedited procurement of essential hygiene, testing and medical supplies and expands the field of professionals permitted to conduct testing."
+            'date': parseDate('03/07/2020 12:00:00 AM'),
+            'label': 'State of Emergency declared',
+            'text': 'Gov. Andrew Cuomo declares a State of Emergency. This declaration allows, among other things, expedited procurement of essential hygiene, testing and medical supplies and expands the field of professionals permitted to conduct testing.'
 
         },
         {
-            'date': parseDate("03/18/2020 12:00:00 AM"),
-            'label': "Workforce density 50%",
-            'text': "Workforce density 50%"
+            'date': parseDate('03/18/2020 12:00:00 AM'),
+            'label': 'Workforce density 50%',
+            'text': 'Workforce density 50%'
 
         },
         {
-            'date': parseDate("03/19/2020 12:00:00 AM"),
-            'label': "Workforce density 25%",
-            'text': "Workforce density 25%"
+            'date': parseDate('03/19/2020 12:00:00 AM'),
+            'label': 'Workforce density 25%',
+            'text': 'Workforce density 25%'
 
         },
         {
-            'date': parseDate("03/22/2020 12:00:00 AM"),
-            'label': "Stay at home order",
-            'text': "Stay at home order"
+            'date': parseDate('03/22/2020 12:00:00 AM'),
+            'label': 'Stay at home order',
+            'text': 'Stay at home order'
 
         },
         {
-            'date': parseDate("06/08/2020 12:00:00 AM"),
-            'label': "Phase 1 reopening",
-            'text': "Phase 1 reopening"
+            'date': parseDate('06/08/2020 12:00:00 AM'),
+            'label': 'Phase 1 reopening',
+            'text': 'Phase 1 reopening'
 
         },
         {
-            'date': parseDate("06/22/2020 12:00:00 AM"),
-            'label': "Phase 2 reopening",
-            'text': "Phase 2 reopening"
+            'date': parseDate('06/22/2020 12:00:00 AM'),
+            'label': 'Phase 2 reopening',
+            'text': 'Phase 2 reopening'
 
         },
         {
-            'date': parseDate("07/06/2020 12:00:00 AM"),
-            'label': "Phase 3 reopening",
-            'text': "Phase 3 reopening"
+            'date': parseDate('07/06/2020 12:00:00 AM'),
+            'label': 'Phase 3 reopening',
+            'text': 'Phase 3 reopening'
 
         },
 
@@ -221,6 +229,26 @@
                 d['HOSPITALIZED_COUNT'] = +d['HOSPITALIZED_COUNT'];
                 d['DEATH_COUNT'] = +d['DEATH_COUNT'];
             });
+            let n = 3
+            let average = function average(objects, c) {
+                let sum = 0;
+                for (let i = 0; i < objects.length; i++) {
+                    sum += objects[i][c];
+                }
+                return sum / objects.length;
+            }
+            for (let i = 0; i < data.length; i++) {
+                ['CASE_COUNT', 'HOSPITALIZED_COUNT', 'DEATH_COUNT'].forEach(function (c) {
+                    let avg
+                    if (i < n) {
+                        avg = data[i][c]
+                    } else {
+                        avg = average(data.slice(i - n, i), c)
+                    }
+                    data[i][c + '_SMOOTH'] = avg
+                })
+
+            }
 
 
             makeChart(data, markers)
@@ -250,37 +278,35 @@
                     barColor = 'steelblue'
             }
             yScale.domain([0, d3.max(data, d => d[targetAttribute])])
-            axes.select(".y").transition().call(yAxis);
+            axes.select('.y').transition().call(yAxis);
 
             yScaleBrush.domain([0, d3.max(data, d => d[targetAttribute])])
 
-            brushGroup.select(".brush-line")
+            brushGroup.select('.brush-line')
                 .transition()
                 .duration(1000)
-                .attr("fill", barColor)
-                .attr("d",
+                .attr('fill', barColor)
+                .attr('d',
                     d3.line(xScaleBrush, yScaleBrush)
                         .x(d => xScaleBrush(d['DATE_OF_INTEREST']))
                         .y(d => yScaleBrush(d[targetAttribute])));
-            updateBars(chart.property("value"), 1000)
+            updateBars(chart.property('value'), 1000)
         };
 
-        // Get names of cereals, for dropdown
         let attributes = ['CASE_COUNT', 'HOSPITALIZED_COUNT', 'DEATH_COUNT'];
 
+        let dropdown = d3.select('#attribute-dropdown')
+            .insert('select')
+            .on('change', dropdownChange);
 
-        let dropdown = d3.select("#attribute-dropdown")
-            .insert("select")
-            .on("change", dropdownChange);
-
-        dropdown.selectAll("option")
+        dropdown.selectAll('option')
             .data(attributes)
-            .enter().append("option")
-            .attr("value", function (d) {
+            .enter().append('option')
+            .attr('value', function (d) {
                 return d;
             })
             .text(function (d) {
-                return d.replace("_", " ").toLowerCase();
+                return d.replace('_', ' ').toLowerCase();
             });
 
         const svgWidth = 1728,
@@ -311,7 +337,7 @@
         const chart = svg
             .append('g')
             .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
+        chart.append('g').attr('class', 'bars');
         //AXES
         const axes = chart.append('g');
 
@@ -342,28 +368,37 @@
             .attr('x', 0 - (chartHeight / 2))
             .attr('dy', '1em')
             .style('text-anchor', 'middle')
-            .text(targetAttribute.replace("_", " "));
+            .text(targetAttribute.replace('_', ' '));
+
+        chart.append('g')
+            .append('path')
+            .datum(data)
+            .attr('class', 'smooth-line')
+            .attr('d', d3.line()
+                .x(d => xScale(d['DATE_OF_INTEREST']))
+                .y(d => yScale(d[targetAttribute + '_SMOOTH']))
+            )
 
         //BRUSH
         let focusTopMargin = 20;
 
         const brush = d3.brushX()
             .extent([[0, 0], [chartWidth, brushAreaHeight]])
-            .on("brush", brushed)
-            .on("end", brushended);
+            .on('brush', brushed)
+            .on('end', brushended);
 
         const defaultSelection = [xScaleBrush.range()[0], xScaleBrush(d3.timeMonth.offset(xScale.domain()[0], 1))];
 
-        let brushGroup = svg.append("g")
-            .attr("class", "brush")
+        let brushGroup = svg.append('g')
+            .attr('class', 'brush')
             .attr('transform', 'translate(' + margin.left + ',' + focusTopMargin + ')');
         brushGroup.call(d3.axisTop(xScaleBrush), xScaleBrush, brushAreaHeight);
 
-        brushGroup.append("path")
+        brushGroup.append('path')
             .datum(data)
             .attr('class', 'brush-line')
-            .attr("fill", barColor)
-            .attr("d",
+            .attr('fill', barColor)
+            .attr('d',
                 d3.line(xScaleBrush, yScaleBrush)
                     .x(d => xScaleBrush(d['DATE_OF_INTEREST']))
                     .y(d => yScaleBrush(d[targetAttribute])));
@@ -374,43 +409,52 @@
 
         brushGroup
             .transition()
-            .ease(d3.easePolyInOut.exponent(0.4))
+            .ease(d3.easePolyOut.exponent(0.3))
             .duration(totalAnimationTime)
             .call(brush.move, [xScaleBrush.range()[0], xScaleBrush.range()[1]]);
 
         function updateBars(brushSelection, duration) {
             xScale.domain(d3.event.selection === null ? xScaleBrush.domain() : brushSelection);
-            chart.select(".x.axis").call(xAxis);
+            chart.select('.x.axis').call(xAxis);
             let filteredData = data.filter(function (d) {
                 return d['DATE_OF_INTEREST'] > brushSelection[0] & d['DATE_OF_INTEREST'] < brushSelection[1]
             });
 
-            let u = chart.selectAll(".bin").data(filteredData);
+            let u = d3.select('.bars').selectAll('.bin').data(filteredData);
 
             u.enter()
                 .append('rect')
                 .merge(u)
                 .attr('fill', barColor)
-                .attr("x", d => xScale(d['DATE_OF_INTEREST']))
-                .attr("width", chartWidth / filteredData.length)
-                .attr("y", chartHeight)
-                .attr("height", 0)
-                .classed("bin", 1)
+                .attr('x', d => xScale(d['DATE_OF_INTEREST']))
+                .attr('width', chartWidth / filteredData.length)
+                .attr('y', chartHeight)
+                .attr('height', 0)
+                .classed('bin', 1)
                 .transition()
                 .duration(duration)
-                .attr("y", d => yScale(d[targetAttribute]))
-                .attr("height", d => chartHeight - yScale(d[targetAttribute]))
+                .attr('y', d => yScale(d[targetAttribute]))
+                .attr('height', d => chartHeight - yScale(d[targetAttribute]))
 
-            chart.selectAll(".bin")
-                .on("mouseenter", onMouseEnter)
-                .on("mouseleave", onMouseLeave);
+            chart.selectAll('.bin')
+                .on('mouseenter', onMouseEnter)
+                .on('mouseleave', onMouseLeave);
             u.exit().remove();
+
+            chart.select('.smooth-line')
+                .datum(filteredData)
+                .transition()
+                .duration(duration === 100 ? duration / 2 : duration)
+                .attr('d', d3.line()
+                    .x(d => xScale(d['DATE_OF_INTEREST']) + (chartWidth / filteredData.length) / 2)
+                    .y(d => yScale(d[targetAttribute + '_SMOOTH']))
+                )
         }
 
         function brushed() {
             if (d3.event.selection) {
                 let brushSelection = d3.event.selection.map(xScaleBrush.invert, xScaleBrush).map(d3.timeDay.round);
-                chart.property("value", brushSelection);
+                chart.property('value', brushSelection);
                 updateBars(brushSelection, 100);
             }
         }
@@ -422,25 +466,25 @@
         }
 
         //TOOLTIP
-        const tooltip = d3.select("#tooltip");
-        let timeFormat = d3.timeFormat("%B %d, %Y");
+        const tooltip = d3.select('#tooltip');
+        let timeFormat = d3.timeFormat('%B %d, %Y');
 
         function onMouseEnter(datum) {
-            tooltip.select("#tooltip-date").text(timeFormat(datum['DATE_OF_INTEREST']));
-            tooltip.select("#tooltip-cases").text(['Number of cases:', datum['CASE_COUNT']].join(' '));
-            tooltip.select("#tooltip-hospitalized").text(['Number of hospitalized:', datum['HOSPITALIZED_COUNT']].join(' '));
-            tooltip.select("#tooltip-deaths").text(['Number of deaths:', datum['DEATH_COUNT']].join(' '));
+            tooltip.select('#tooltip-date').text(timeFormat(datum['DATE_OF_INTEREST']));
+            tooltip.select('#tooltip-cases').text(['Number of cases:', datum['CASE_COUNT']].join(' '));
+            tooltip.select('#tooltip-hospitalized').text(['Number of hospitalized:', datum['HOSPITALIZED_COUNT']].join(' '));
+            tooltip.select('#tooltip-deaths').text(['Number of deaths:', datum['DEATH_COUNT']].join(' '));
             const x = xScale(datum['DATE_OF_INTEREST']) + margin.left + (chartWidth / data.length) / 2
             const y = yScale(datum[targetAttribute]) + margin.top
-            tooltip.style("transform", `translate(`
+            tooltip.style('transform', `translate(`
                 + `calc( -50% + ${x}px),`
                 + `calc(-100% + ${y}px)`
                 + `)`)
-            tooltip.style("opacity", 1);
+            tooltip.style('opacity', 1);
         }
 
         function onMouseLeave() {
-            tooltip.style("opacity", 0)
+            tooltip.style('opacity', 0)
         }
     }
 
