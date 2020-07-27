@@ -6,6 +6,10 @@
     <style>
         @import url(//fonts.googleapis.com/css?family=Open+Sans:400,700);
 
+        h1 {
+            text-align: center;
+        }
+
         #svg-container {
             position: relative;
         }
@@ -84,6 +88,44 @@
             z-index: 1000;
             opacity: 0.5;
         }
+
+        .round-button {
+            margin: auto;
+            width: 100px;
+        }
+
+        .round-button-circle {
+            width: 100%;
+            height: 0;
+            padding-bottom: 100%;
+            border-radius: 50%;
+            border: 10px solid #cfdcec;
+            overflow: hidden;
+
+            background: #4679BD;
+            box-shadow: 0 0 3px gray;
+        }
+
+        .round-button-circle:hover {
+            background: #30588e;
+        }
+
+        .round-button a {
+            display: block;
+            float: left;
+            width: 100%;
+            padding-top: 50%;
+            padding-bottom: 50%;
+            line-height: 1em;
+            margin-top: -0.5em;
+
+            text-align: center;
+            color: #e2eaf3;
+            font-family: Verdana;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-decoration: none;
+        }
     </style>
     <script src='d3/d3.v5.min.js'></script>
     <script src="d3/d3-annotation.min.js"></script>
@@ -91,6 +133,12 @@
 <body>
 <div id='title'>
     <h1>History of COVID-19 in New York</h1>
+    <div id="start-animation" class="round-button">
+        <div class="round-button-circle">
+            <a onClick="startAnimation(); return false;" href="fallback.html" class="round-button">Start</a>
+        </div>
+    </div>
+
     <div id='attribute-dropdown'></div>
 </div>
 <div id='svg-container'>
@@ -185,41 +233,44 @@
         },
 
     ];
-    d3.csv('data/ny.csv')
-        .then(function (data) {
-            data.forEach(function (d) {
-                d['DATE_OF_INTEREST'] = parseDate(d['DATE_OF_INTEREST']);
-                d['CASE_COUNT'] = +d['CASE_COUNT'];
-                d['HOSPITALIZED_COUNT'] = +d['HOSPITALIZED_COUNT'];
-                d['DEATH_COUNT'] = +d['DEATH_COUNT'];
-            });
-            let n = 3
-            let average = function average(objects, c) {
-                let sum = 0;
-                for (let i = 0; i < objects.length; i++) {
-                    sum += objects[i][c];
-                }
-                return sum / objects.length;
-            }
-            for (let i = 0; i < data.length; i++) {
-                ['CASE_COUNT', 'HOSPITALIZED_COUNT', 'DEATH_COUNT'].forEach(function (c) {
-                    let avg
-                    if (i < n) {
-                        avg = data[i][c]
-                    } else {
-                        avg = average(data.slice(i - n, i), c)
+    let startAnimation = function () {
+        d3.select("#start-animation").style("display", "none");
+        d3.csv('data/ny.csv')
+            .then(function (data) {
+                data.forEach(function (d) {
+                    d['DATE_OF_INTEREST'] = parseDate(d['DATE_OF_INTEREST']);
+                    d['CASE_COUNT'] = +d['CASE_COUNT'];
+                    d['HOSPITALIZED_COUNT'] = +d['HOSPITALIZED_COUNT'];
+                    d['DEATH_COUNT'] = +d['DEATH_COUNT'];
+                });
+                let n = 3
+                let average = function average(objects, c) {
+                    let sum = 0;
+                    for (let i = 0; i < objects.length; i++) {
+                        sum += objects[i][c];
                     }
-                    data[i][c + '_SMOOTH'] = avg
-                })
+                    return sum / objects.length;
+                }
+                for (let i = 0; i < data.length; i++) {
+                    ['CASE_COUNT', 'HOSPITALIZED_COUNT', 'DEATH_COUNT'].forEach(function (c) {
+                        let avg
+                        if (i < n) {
+                            avg = data[i][c]
+                        } else {
+                            avg = average(data.slice(i - n, i), c)
+                        }
+                        data[i][c + '_SMOOTH'] = avg
+                    })
 
-            }
+                }
 
 
-            makeChart(data, markers)
-        })
-        .catch(function (error) {
-            // handle error
-        })
+                makeChart(data, markers)
+            })
+            .catch(function (error) {
+                // handle error
+            })
+    }
 
 
     function makeChart(data, markers) {
@@ -273,8 +324,16 @@
                 return d.replace('_', ' ').toLowerCase();
             });
 
-        const svgWidth = 1728,
-            svgHeight = 972,
+        const width = window.innerWidth
+            || document.documentElement.clientWidth
+            || document.body.clientWidth;
+
+        const height = window.innerHeight
+            || document.documentElement.clientHeight
+            || document.body.clientHeight;
+
+        const svgWidth = 0.8 * width,
+            svgHeight = 0.8 * height,
             margin = {top: 130, right: 20, bottom: 70, left: 70},
             chartWidth = svgWidth - margin.left - margin.right,
             chartHeight = svgHeight - margin.top - margin.bottom,
