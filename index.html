@@ -140,7 +140,6 @@
         }
     </style>
     <script src='d3/d3.v5.min.js'></script>
-    <script src='d3/d3-annotation.min.js'></script>
 </head>
 <body>
 <div id='title'>
@@ -164,7 +163,8 @@
 <div id='brush'></div>
 <div id='notes'>
     <h3>Messaging</h3>
-    <p>This narrative visualization shows how different actions taken by the New York state affected the spread of coronavirus.</p>
+    <p>This narrative visualization shows how different actions taken by the New York state affected the spread of
+        coronavirus.</p>
     <h3>Narrative Structure</h3>
     <p>This narrative visualization follows martini glass structure. First, it shows the animation that
         <b>TBD</b>
@@ -359,7 +359,7 @@
                         .x(d => xScaleBrush(d['DATE_OF_INTEREST']))
                         .y(d => yScaleBrush(d[targetAttribute])));
             updateBars(chart.property('value'), 1000)
-            
+
             d3.select('.y-label').text(targetAttribute.replace('_', ' '));
 
         };
@@ -464,6 +464,9 @@
                 .y(d => yScale(d[targetAttribute + '_SMOOTH']))
             )
 
+        chart.append('g')
+            .attr('class', 'markers');
+
         //BRUSH
         let focusTopMargin = 20;
 
@@ -497,8 +500,6 @@
             .ease(d3.easePolyOut.exponent(0.3))
             .duration(totalAnimationTime)
             .call(brush.move, [xScaleBrush.range()[0], xScaleBrush.range()[1]]);
-
-        let makeAnnotations = d3.annotation();
 
         function updateBars(brushSelection, duration) {
             xScale.domain(d3.event.selection === null ? xScaleBrush.domain() : brushSelection);
@@ -550,19 +551,60 @@
                 'dx': m.dx,
                 'color': 'MediumVioletRed'
             }));
-            if (annotations.length > 0) {
-                let makersGroup = chart.select('.markers');
-                if (makersGroup.empty()) {
-                    makeAnnotations.annotations(annotations)
-                    chart.append('g')
-                        .attr('class', 'markers')
-                        .call(makeAnnotations)
-                } else {
-                    makeAnnotations.annotations(annotations);
-                    makeAnnotations.update()
-                }
 
-            }
+            let annElements = chart.select('.markers').selectAll('.annotation').data(annotations);
+            let ann = annElements
+                .enter()
+                .append('g')
+                .attr('class', 'annotation')
+                .attr('transform', d => 'translate(' + d.x + ',' + d.y + ')');
+
+            ann.append('circle')
+                .attr('cx', 0)
+                .attr('cy', 0)
+                .attr('r', 4)
+                .style('fill', d => d.color);
+            ann
+                .append('line')
+                .attr('class', 'ann-c1')
+                .style('stroke', d => d.color)
+                .style('stroke-width', 2)
+                .attr('x1', 0)
+                .attr('y1', 0)
+                .attr('x2', d => d.dx)
+                .attr('y2', d => d.dy);
+
+            ann.append('g')
+                .attr('transform', d => 'translate(' + d.dx + ',' + d.dy + ')')
+                .attr('class', 'ann-c2')
+                .append('line')
+                .attr('class', 'ann-txt-ln')
+                .style('stroke', d => d.color)
+                .style('stroke-width', 2)
+                .attr('x1', 0)
+                .attr('y1', 0)
+                .attr('x2', d => Math.sign(d.dx) * 90)
+                .attr('y2', 0);
+
+            ann.append('g')
+                .attr('transform', d => 'translate(' + (d.dx < 0 ? d.dx - 130 : d.dx) + ',' + (d.dy - 10) + ')')
+                .attr('class', 'ann-txt')
+                .append('text')
+                .style('fill', d => d.color)
+                .style('font-weight', 'bold')
+                .text(d => d.note.title);
+
+
+            annElements.transition().duration(0).attr('transform', d => 'translate(' + d.x + ',' + d.y + ')');
+            annElements.select('.ann-c1').transition().duration(0).attr('x2', d => d.dx).attr('y2', d => d.dy);
+            annElements.select('.ann-c2').transition().duration(0).attr('transform', d => 'translate(' + d.dx + ',' + d.dy + ')');
+            annElements.select('.ann-txt-ln').transition().duration(0).attr('x2', d => Math.sign(d.dx) * 90)
+            annElements.select('.ann-txt').transition().duration(0).attr('transform', d => 'translate(' + (d.dx < 0 ? d.dx - 130 : d.dx) + ',' + (d.dy - 10) + ')')
+                .select('text').transition().duration(0).text(d => d.note.title);
+
+            annElements.exit()
+                .remove();
+
         }
 
         function brushed() {
@@ -579,11 +621,9 @@
             }
         }
 
-        //TOOLTIP
-        const tooltip = d3.select('#tooltip');
-        let timeFormat = d3.timeFormat('%B %d, %Y');
-
         function onMouseEnter(datum) {
+            const tooltip = d3.select('#tooltip');
+            const timeFormat = d3.timeFormat('%B %d, %Y');
             tooltip.select('#tooltip-date').text(timeFormat(datum['DATE_OF_INTEREST']));
             tooltip.select('#tooltip-cases').text(['Number of cases:', datum['CASE_COUNT']].join(' '));
             tooltip.select('#tooltip-hospitalized').text(['Number of hospitalized:', datum['HOSPITALIZED_COUNT']].join(' '));
@@ -600,6 +640,7 @@
         }
 
         function onMouseLeave() {
+            const tooltip = d3.select('#tooltip');
             tooltip.style('opacity', 0)
         }
     }
