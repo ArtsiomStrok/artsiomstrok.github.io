@@ -497,8 +497,23 @@
 
         brushGroup
             .transition()
-            .ease(d3.easePolyOut.exponent(0.3))
-            .duration(totalAnimationTime)
+            .duration(3000)
+            .call(brush.move, [xScaleBrush.range()[0], xScaleBrush(d3.timeDay.offset(markers[2].date, 3))])
+            .transition()
+            .delay(1000)
+            .duration(4000)
+            .call(brush.move, [xScaleBrush.range()[0], xScaleBrush(d3.timeDay.offset(markers[5].date, 7))])
+            .transition()
+            .delay(500)
+            .duration(5000)
+            .call(brush.move, [xScaleBrush.range()[0], xScaleBrush(d3.timeDay.offset(markers[6].date, 1))])
+            .transition()
+            .delay(500)
+            .duration(2000)
+            .call(brush.move, [xScaleBrush.range()[0], xScaleBrush(d3.timeDay.offset(markers[7].date, 1))])
+            .transition()
+            .delay(500)
+            .duration(2000)
             .call(brush.move, [xScaleBrush.range()[0], xScaleBrush.range()[1]]);
 
         function updateBars(brushSelection, duration) {
@@ -611,7 +626,7 @@
             if (d3.event.selection) {
                 let brushSelection = d3.event.selection.map(xScaleBrush.invert, xScaleBrush).map(d3.timeDay.round);
                 chart.property('value', brushSelection);
-                updateBars(brushSelection, 100);
+                updateBars(brushSelection, 0);
             }
         }
 
