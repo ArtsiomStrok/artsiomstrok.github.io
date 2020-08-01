@@ -162,41 +162,56 @@
 </div>
 <div id='brush'></div>
 <div id='notes'>
+    <h3>Author</h3>
+    <p>Artsiom Strok (astrok2@illinois.edu)</p>
+    <h3>Narrative visualization link</h3>
+    <p><a href="https://artsiomstrok.github.io">https://artsiomstrok.github.io</a></p>
     <h3>Messaging</h3>
     <p>This narrative visualization shows how different actions taken by the New York state affected the spread of
         coronavirus.</p>
+    <h3>The dataset</h3>
+    <p>The COVID-19 data was acquired from
+        <a href="https://data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an/rc75-m7u3">
+            https://data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an/rc75-m7u3</a> and
+        actions and markers were manually collected from news websites.</p>
     <h3>Narrative Structure</h3>
-    <p>This narrative visualization follows martini glass structure. First, it shows the animation that
-        <b>TBD</b>
-        <br/>
-
-        Which structure was your narrative visualization designed to follow (martini glass,
-        interactive slide show or drop-down story)? How does your narrative visualization follow that structure? (All of
-        these structures can include the opportunity to 'drill-down' and explore. The difference is where that
-        opportunity
-        happens in the structure.)</p>
+    <p>This narrative visualization follows the martini glass structure.
+        First, it shows the animated timeline from the coronavirus's first day spread in New York up to the current
+        date, as well as events and actions on the timeline.
+        After the animation user can drill down and get additional information by hovering the cursor on the specific
+        date, use the timeline brush to
+        zoom in to a specific timeframe and explore other metrics by selecting different attributes for visualization.
+    </p>
+    <img src="resources/narrative-structure.png" alt="Narrative Structure"/>
     <h3>Visual Structure</h3>
     <p>
-        <b>TBD</b>
-        <br/>
-        What visual structure is used for each scene? How does it ensure the viewer can understand
-        the data and navigate the scene? How does it highlight to urge the viewer to focus on the important parts of the
-        data in each scene? How does it help the viewer transition to other scenes, to understand how the data connects
-        to
-        the data in other scenes?</p>
+        The data presented to the user as a bar chart with a three-day average smoothing line on top to deal with delays
+        or errors in result reporting.
+        The X-axis represents a timeline and animation is moving from left to right.
+        The Y-label represents the value of the selected metric.
+        There is another chart with a timeline brush that gives the person an ability to zoom to the specific timeframe
+        and
+        filter events and actions. Also, the chart helps the person to understand the context.
+        The tooltip for each bar gives the person additional information about the metrics for the selected day.
+        Annotations are colored in violet red color for contrast to highlight the event or action and draw the user's
+        attention.
+        <img src="resources/visual-structure.png" alt="Visual Structure"/>
+    </p>
     <h3>Scenes</h3>
     <p>There are three scenes in this narrative visualization.
-        The first author driven scene shows the daily cases count on the timeline and actions taken by New York state.
-        The rest of two scenes focused on daily hospitalized count and death count respectively and they are user
-        driven.</p>
+        The first author-driven scene shows the daily cases count on the timeline and actions taken by New York.
+        The rest of two scenes focused on daily hospitalized count and death count respectively and they are
+        user-driven.
+        All scenes share common template and visual structure, and share annotations.</p>
     <h3>Annotations</h3>
-    <p>All events and actions taken by New York states are annotated on the chart and appeared during animation.</p>
+    <p>Annotations represent events and actions taken by New York and appeared on the chart during
+        the animation.</p>
     <h3>Parameters</h3>
     <p>There are two parameters in the narrative visualization.
         The first is type of statistics: case count, hospitalization count of deaths count.
         The second is time interval.
         The first scene is using the case count parameter and entire timeline available in the data.
-        The second and third scenes are using hospitalization count and death count respectively with enitre timeline by
+        The second and third scenes are using hospitalization count and death count respectively with entire timeline by
         default.</p>
     <h3>Triggers</h3>
     <p>There are three triggers available:
@@ -204,7 +219,8 @@
         The timeline brush to select the time interval.
         The tooltip with additional information when user hover cursor over the bar on the chart.</p>
     <h3>Notes:</h3>
-    <p>TBD</p>
+    <p>The narrative visualization was created using only <b>D3.js</b> library (ver. 5.16.0) without any extensions. For
+        more details please see the source code https://github.com/ArtsiomStrok/artsiomstrok.github.io</p>
 </div>
 
 <script>
