@@ -138,6 +138,13 @@
             font-weight: bold;
             text-decoration: none;
         }
+
+        .center {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
     </style>
     <script src='d3/d3.v5.min.js'></script>
 </head>
@@ -182,7 +189,7 @@
         date, use the timeline brush to
         zoom in to a specific timeframe and explore other metrics by selecting different attributes for visualization.
     </p>
-    <img src="resources/narrative-structure.png" alt="Narrative Structure"/>
+    <img src="resources/narrative-structure.png" alt="Narrative Structure" class="center"/>
     <h3>Visual Structure</h3>
     <p>
         The data presented to the user as a bar chart with a three-day average smoothing line on top to deal with delays
@@ -195,8 +202,8 @@
         The tooltip for each bar gives the person additional information about the metrics for the selected day.
         Annotations are colored in violet red color for contrast to highlight the event or action and draw the user's
         attention.
-        <img src="resources/visual-structure.png" alt="Visual Structure"/>
     </p>
+    <img src="resources/visual-structure.png" alt="Visual Structure" class="center"/>
     <h3>Scenes</h3>
     <p>There are three scenes in this narrative visualization.
         The first author-driven scene shows the daily cases count on the timeline and actions taken by New York.
