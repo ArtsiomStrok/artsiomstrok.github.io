@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Space Shooter - HTML5 Game</title>
     <style>
         * {
@@ -101,6 +101,118 @@
         .back-btn:hover {
             background: #888;
         }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 15;
+        }
+
+        .dpad {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+
+        .dpad-btn {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 255, 255, 0.3);
+            border: 2px solid #00ffff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ffff;
+            font-size: 20px;
+            font-weight: bold;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .dpad-btn:active {
+            background: rgba(0, 255, 255, 0.6);
+            transform: scale(0.95);
+        }
+
+        .dpad-up { top: 0; left: 40px; }
+        .dpad-down { bottom: 0; left: 40px; }
+        .dpad-left { top: 40px; left: 0; }
+        .dpad-right { top: 40px; right: 0; }
+
+        .shoot-btn {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 68, 68, 0.3);
+            border: 3px solid #ff4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ff4444;
+            font-size: 24px;
+            font-weight: bold;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .shoot-btn:active {
+            background: rgba(255, 68, 68, 0.6);
+            transform: scale(0.95);
+        }
+
+        /* Hide controls on desktop */
+        @media (min-width: 769px) {
+            .mobile-controls {
+                display: none;
+            }
+        }
+
+        /* Mobile responsive adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                border: 1px solid #00ffff;
+                box-shadow: 0 0 10px #00ffff;
+            }
+
+            canvas {
+                width: 100vw;
+                height: 70vh;
+                max-width: 400px;
+                max-height: 600px;
+            }
+
+            .ui {
+                font-size: 16px;
+            }
+
+            .controls {
+                display: none;
+            }
+
+            .back-btn {
+                top: 5px;
+                right: 5px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .game-over {
+                width: 90%;
+                max-width: 300px;
+                padding: 20px;
+            }
+
+            .game-over h2 {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -126,6 +238,17 @@
         </div>
 
         <button class="back-btn" onclick="goHome()">← Back to Store</button>
+
+        <!-- Mobile Controls -->
+        <div class="mobile-controls">
+            <div class="dpad">
+                <div class="dpad-btn dpad-up" id="moveUp">↑</div>
+                <div class="dpad-btn dpad-down" id="moveDown">↓</div>
+                <div class="dpad-btn dpad-left" id="moveLeft">←</div>
+                <div class="dpad-btn dpad-right" id="moveRight">→</div>
+            </div>
+            <div class="shoot-btn" id="shootBtn">🔥</div>
+        </div>
     </div>
 
     <script>
@@ -154,6 +277,7 @@
         const keys = {};
         let lastShot = 0;
         const shotCooldown = 200; // milliseconds
+        let isShooting = false;
 
         // Initialize stars for background
         function initStars() {
@@ -196,7 +320,7 @@
                 }
 
                 // Shooting
-                if (keys[' '] && Date.now() - lastShot > shotCooldown) {
+                if ((keys[' '] || isShooting) && Date.now() - lastShot > shotCooldown) {
                     this.shoot();
                     lastShot = Date.now();
                 }
@@ -601,6 +725,14 @@
 
         // Initialize game
         function initGame() {
+            // Adjust canvas size for mobile
+            if (window.innerWidth <= 768) {
+                const maxWidth = Math.min(400, window.innerWidth - 20);
+                const maxHeight = Math.min(600, window.innerHeight * 0.7);
+                canvas.style.width = maxWidth + 'px';
+                canvas.style.height = maxHeight + 'px';
+            }
+
             player = new Player();
             bullets = [];
             enemies = [];
@@ -655,6 +787,136 @@
         document.addEventListener('keyup', (e) => {
             keys[e.key] = false;
         });
+
+        // Mobile touch controls
+        function setupMobileControls() {
+            // Movement controls
+            const moveUp = document.getElementById('moveUp');
+            const moveDown = document.getElementById('moveDown');
+            const moveLeft = document.getElementById('moveLeft');
+            const moveRight = document.getElementById('moveRight');
+            const shootBtn = document.getElementById('shootBtn');
+
+            // Touch events for movement
+            moveUp.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys['ArrowUp'] = true;
+            });
+            moveUp.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys['ArrowUp'] = false;
+            });
+
+            moveDown.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys['ArrowDown'] = true;
+            });
+            moveDown.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys['ArrowDown'] = false;
+            });
+
+            moveLeft.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys['ArrowLeft'] = true;
+            });
+            moveLeft.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys['ArrowLeft'] = false;
+            });
+
+            moveRight.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                keys['ArrowRight'] = true;
+            });
+            moveRight.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys['ArrowRight'] = false;
+            });
+
+            // Shoot button
+            shootBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                isShooting = true;
+            });
+            shootBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                isShooting = false;
+            });
+
+            // Prevent context menu on long press
+            [moveUp, moveDown, moveLeft, moveRight, shootBtn].forEach(btn => {
+                btn.addEventListener('contextmenu', (e) => e.preventDefault());
+                btn.addEventListener('selectstart', (e) => e.preventDefault());
+            });
+        }
+
+        // Canvas touch controls (alternative swipe controls)
+        function setupCanvasTouch() {
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchMoving = false;
+
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                touchStartX = touch.clientX - rect.left;
+                touchStartY = touch.clientY - rect.top;
+                touchMoving = true;
+
+                // Tap to shoot
+                if (!isShooting) {
+                    isShooting = true;
+                    setTimeout(() => {
+                        if (!e.touches.length) isShooting = false;
+                    }, 100);
+                }
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!touchMoving || !player) return;
+
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const touchY = touch.clientY - rect.top;
+
+                // Calculate relative movement
+                const deltaX = touchX - touchStartX;
+                const deltaY = touchY - touchStartY;
+
+                // Update movement keys based on touch direction
+                keys['ArrowLeft'] = deltaX < -20;
+                keys['ArrowRight'] = deltaX > 20;
+                keys['ArrowUp'] = deltaY < -20;
+                keys['ArrowDown'] = deltaY > 20;
+            });
+
+            canvas.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                touchMoving = false;
+                isShooting = false;
+                
+                // Clear movement keys
+                keys['ArrowLeft'] = false;
+                keys['ArrowRight'] = false;
+                keys['ArrowUp'] = false;
+                keys['ArrowDown'] = false;
+            });
+        }
+
+        // Prevent zoom and scroll on mobile
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.closest('.game-container')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Setup mobile controls
+        setupMobileControls();
+        setupCanvasTouch();
 
         // Start the game
         initGame();
