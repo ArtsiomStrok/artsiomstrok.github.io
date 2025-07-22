@@ -43,10 +43,29 @@
             font-size: 16px;
             text-shadow: 2px 2px 4px #000;
             color: #ecf0f1;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .ui div {
             margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #livesDisplay {
+            font-size: 18px;
+        }
+
+        #swordDisplay, #bowDisplay, #armorDisplay {
+            font-size: 14px;
+        }
+
+        .power-star {
+            color: #f39c12;
         }
 
         .menu {
@@ -186,12 +205,12 @@
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         
         <div class="ui">
-            <div>Lives: <span id="lives">3</span></div>
-            <div>Arrows: <span id="arrows">10</span></div>
-            <div>Level: <span id="level">1</span></div>
-            <div>Sword: +<span id="swordDamage">1</span></div>
-            <div>Bow: +<span id="bowDamage">1</span></div>
-            <div>Armor: +<span id="armor">0</span></div>
+            <div id="livesDisplay">❤️❤️❤️</div>
+            <div id="arrowsDisplay">🏹 × <span id="arrows">10</span></div>
+            <div>🎯 Level: <span id="level">1</span></div>
+            <div id="swordDisplay">⚔️ ★</div>
+            <div id="bowDisplay">🏹 ★</div>
+            <div id="armorDisplay">🛡️</div>
         </div>
 
         <div class="menu" id="mainMenu">
@@ -1367,12 +1386,30 @@
         }
 
         function updateUI() {
-            document.getElementById('lives').textContent = gameState.lives;
+            // Update lives display with heart icons
+            const livesDisplay = document.getElementById('livesDisplay');
+            livesDisplay.textContent = '❤️'.repeat(Math.max(0, gameState.lives));
+            
+            // Update arrows display
             document.getElementById('arrows').textContent = gameState.arrows;
+            
+            // Update level display
             document.getElementById('level').textContent = gameState.level;
-            document.getElementById('swordDamage').textContent = gameState.swordDamage;
-            document.getElementById('bowDamage').textContent = gameState.bowDamage;
-            document.getElementById('armor').textContent = gameState.armor;
+            
+            // Update sword damage with power indicators
+            const swordDisplay = document.getElementById('swordDisplay');
+            const swordStars = '<span class="power-star">★</span>'.repeat(gameState.swordDamage);
+            swordDisplay.innerHTML = '⚔️ ' + swordStars;
+            
+            // Update bow damage with power indicators
+            const bowDisplay = document.getElementById('bowDisplay');
+            const bowStars = '<span class="power-star">★</span>'.repeat(gameState.bowDamage);
+            bowDisplay.innerHTML = '🏹 ' + bowStars;
+            
+            // Update armor with shield indicators
+            const armorDisplay = document.getElementById('armorDisplay');
+            const armorStars = '<span class="power-star">★</span>'.repeat(gameState.armor);
+            armorDisplay.innerHTML = '🛡️ ' + (gameState.armor > 0 ? ' ' + armorStars : '');
         }
 
         // Input handling
