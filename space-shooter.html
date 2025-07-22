@@ -555,25 +555,42 @@
             }
 
             shoot() {
+                const centerX = this.x + this.width / 2;
+                const baseSpeed = -8;
+                
                 if (this.projectileCount === 1) {
-                    // Single shot
-                    bullets.push(new Bullet(this.x + this.width / 2 - 2, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                    // Single shot - straight ahead
+                    bullets.push(new Bullet(centerX - 2, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    
                 } else if (this.projectileCount === 2) {
-                    // Double shot
-                    bullets.push(new Bullet(this.x + this.width / 2 - 8, this.y, -8, '#00ffff', 'player', this.projectilePower));
-                    bullets.push(new Bullet(this.x + this.width / 2 + 4, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                    // Double shot - slightly spread
+                    bullets.push(new Bullet(centerX - 8, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(centerX + 4, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    
                 } else if (this.projectileCount === 3) {
-                    // Triple shot
-                    bullets.push(new Bullet(this.x + this.width / 2 - 12, this.y, -8, '#00ffff', 'player', this.projectilePower));
-                    bullets.push(new Bullet(this.x + this.width / 2 - 2, this.y, -8, '#00ffff', 'player', this.projectilePower));
-                    bullets.push(new Bullet(this.x + this.width / 2 + 8, this.y, -8, '#00ffff', 'player', this.projectilePower));
-                } else {
-                    // Quad shot and beyond
-                    const spread = 6;
-                    const startX = this.x + this.width / 2 - (this.projectileCount - 1) * spread / 2;
-                    for (let i = 0; i < this.projectileCount; i++) {
-                        bullets.push(new Bullet(startX + i * spread - 2, this.y, -8, '#00ffff', 'player', this.projectilePower));
-                    }
+                    // Triple shot - left, center, right
+                    bullets.push(new Bullet(centerX - 12, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(centerX - 2, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(centerX + 8, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    
+                } else if (this.projectileCount === 4) {
+                    // Quad shot - 3 straight + 1 angled
+                    bullets.push(new Bullet(centerX - 15, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(centerX - 5, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(centerX + 5, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    
+                    // 45-degree angled shot (left)
+                    bullets.push(new AngleBullet(centerX - 2, this.y, 8, -45, '#00ffff', 'player', this.projectilePower));
+                    
+                } else if (this.projectileCount === 5) {
+                    // Penta shot - 3 straight + 2 angled
+                    bullets.push(new Bullet(centerX - 15, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(centerX - 5, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(centerX + 5, this.y, baseSpeed, '#00ffff', 'player', this.projectilePower));
+                    
+                    // 45-degree angled shots
+                    bullets.push(new AngleBullet(centerX - 2, this.y, 8, -45, '#00ffff', 'player', this.projectilePower)); // Left
+                    bullets.push(new AngleBullet(centerX - 2, this.y, 8, 45, '#00ffff', 'player', this.projectilePower));  // Right
                 }
             }
 
@@ -664,6 +681,29 @@
 
             isOffScreen() {
                 return this.y < -this.height || this.y > canvas.height;
+            }
+        }
+
+        // AngleBullet class for angled projectiles
+        class AngleBullet extends Bullet {
+            constructor(x, y, speed, angle, color, owner, power = 1) {
+                super(x, y, speed, color, owner, power);
+                this.angle = angle; // Angle in degrees
+                
+                // Convert angle to radians and calculate velocity components
+                const radians = (angle * Math.PI) / 180;
+                this.vx = Math.sin(radians) * speed;
+                this.vy = -Math.cos(radians) * speed; // Negative for upward movement
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+            isOffScreen() {
+                return this.y < -this.height || this.y > canvas.height || 
+                       this.x < -this.width || this.x > canvas.width;
             }
         }
 
@@ -992,7 +1032,9 @@
                             }
                             break;
                         case 'multishot':
-                            player.projectileCount = Math.min(player.projectileCount + 1, 5); // Max 5 projectiles
+                            if (player.projectileCount < 5) {
+                                player.projectileCount = Math.min(player.projectileCount + 1, 5); // Max 5 projectiles
+                            }
                             break;
                         case 'speed':
                             player.speedBoostEndTime = Date.now() + 5000; // 5 seconds
@@ -1052,7 +1094,13 @@
             let powerupText = [];
             
             if (player && player.projectileCount > 1) {
-                powerupText.push(`🔴 Multi-Shot x${player.projectileCount}`);
+                let patternText = '';
+                if (player.projectileCount === 2) patternText = ' (Double)';
+                else if (player.projectileCount === 3) patternText = ' (Triple)';
+                else if (player.projectileCount === 4) patternText = ' (Quad + Angle)';
+                else if (player.projectileCount === 5) patternText = ' (Penta + Angles)';
+                
+                powerupText.push(`🔴 Multi-Shot x${player.projectileCount}${patternText}`);
             }
             
             if (player && player.projectilePower > 1) {
