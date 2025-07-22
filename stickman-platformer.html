@@ -19,6 +19,11 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            overflow: auto; /* Allow scrolling on mobile */
+        }
+
+        /* Prevent scrolling only in fullscreen mode */
+        body.fullscreen-mode {
             overflow: hidden;
         }
 
@@ -186,14 +191,16 @@
             bottom: 0;
             left: 0;
             right: 0;
+            width: 100%;
             height: 120px;
             display: none;
-            z-index: 30; /* Higher z-index for better visibility */
+            z-index: 9999; /* Highest z-index to ensure visibility */
             pointer-events: none;
+            background: rgba(0, 0, 0, 0.1); /* Subtle background for visibility */
         }
 
-        /* Ensure mobile controls are always visible on touch devices */
-        @media (pointer: coarse) {
+        /* Force mobile controls visible on ALL touch devices */
+        @media (pointer: coarse), (hover: none), (max-width: 768px) {
             .mobile-controls {
                 display: block !important;
             }
@@ -223,7 +230,7 @@
         .control-btn {
             width: 50px;
             height: 50px;
-            background: rgba(52, 152, 219, 0.8);
+            background: rgba(52, 152, 219, 0.9);
             border: 2px solid #3498db;
             border-radius: 10px;
             color: white;
@@ -234,7 +241,9 @@
             user-select: none;
             touch-action: manipulation;
             transition: all 0.1s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+            z-index: 10001;
         }
 
         .control-btn:active {
@@ -294,7 +303,8 @@
         }
 
         .game-container.fullscreen .mobile-controls {
-            display: block;
+            display: block !important;
+            z-index: 10000 !important;
         }
 
         /* Force landscape on mobile in fullscreen */
@@ -340,7 +350,21 @@
             }
 
             .mobile-controls {
-                display: block;
+                display: block !important;
+            }
+        }
+
+        /* Force mobile controls on any small screen */
+        @media screen and (max-width: 900px), screen and (max-height: 600px) {
+            .mobile-controls {
+                display: block !important;
+            }
+        }
+
+        /* Override any hiding rules for mobile */
+        @media screen and (max-width: 768px) {
+            .mobile-controls {
+                display: block !important;
             }
         }
 
@@ -2378,6 +2402,7 @@
             if (!document.fullscreenElement) {
                 // Enter fullscreen
                 gameContainer.classList.add('fullscreen');
+                document.body.classList.add('fullscreen-mode');
                 
                 if (gameContainer.requestFullscreen) {
                     gameContainer.requestFullscreen();
@@ -2397,6 +2422,13 @@
                     });
                 }
                 
+                // Force show mobile controls
+                const mobileControls = document.querySelector('.mobile-controls');
+                if (mobileControls) {
+                    mobileControls.style.display = 'block';
+                    mobileControls.style.zIndex = '10000';
+                }
+                
                 // Resize canvas for fullscreen
                 resizeCanvasForFullscreen();
             } else {
@@ -2408,6 +2440,7 @@
         function exitFullscreen() {
             const gameContainer = document.querySelector('.game-container');
             gameContainer.classList.remove('fullscreen');
+            document.body.classList.remove('fullscreen-mode');
             
             if (document.exitFullscreen) {
                 document.exitFullscreen();
@@ -2420,6 +2453,13 @@
             // Unlock orientation
             if (screen.orientation && screen.orientation.unlock) {
                 screen.orientation.unlock();
+            }
+            
+            // Reset mobile controls
+            const mobileControls = document.querySelector('.mobile-controls');
+            if (mobileControls) {
+                mobileControls.style.display = '';
+                mobileControls.style.zIndex = '';
             }
             
             // Reset canvas size
@@ -2756,15 +2796,45 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // Force mobile controls visibility on mobile devices
+        function forceMobileControlsVisibility() {
+            const mobileControls = document.querySelector('.mobile-controls');
+            const isMobile = window.innerWidth <= 768 || 
+                            'ontouchstart' in window || 
+                            navigator.maxTouchPoints > 0 ||
+                            window.matchMedia('(pointer: coarse)').matches;
+            
+            if (mobileControls && isMobile) {
+                mobileControls.style.display = 'block';
+                mobileControls.style.zIndex = '9999';
+                console.log('Mobile controls forced visible for mobile device');
+            }
+        }
+
         // Initialize
         setupMobileControls();
+        forceMobileControlsVisibility();
         updateUI();
+        
+        // Also force visibility after a short delay
+        setTimeout(forceMobileControlsVisibility, 100);
 
         // Handle window resize
         window.addEventListener('resize', () => {
             if (document.querySelector('.game-container').classList.contains('fullscreen')) {
                 resizeCanvasForFullscreen();
             }
+            forceMobileControlsVisibility();
+        });
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                forceMobileControlsVisibility();
+                if (document.querySelector('.game-container').classList.contains('fullscreen')) {
+                    resizeCanvasForFullscreen();
+                }
+            }, 300);
         });
 
         // Prevent zoom on double tap for mobile controls
