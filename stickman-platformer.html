@@ -188,8 +188,15 @@
             right: 0;
             height: 120px;
             display: none;
-            z-index: 20;
+            z-index: 30; /* Higher z-index for better visibility */
             pointer-events: none;
+        }
+
+        /* Ensure mobile controls are always visible on touch devices */
+        @media (pointer: coarse) {
+            .mobile-controls {
+                display: block !important;
+            }
         }
 
         .control-group {
@@ -280,7 +287,7 @@
             padding: 0;
         }
 
-        @media (min-width: 769px) {
+        @media (min-width: 769px) and (pointer: fine) {
             .game-container.fullscreen canvas {
                 height: 100vh; /* Full height on desktop */
             }
@@ -305,13 +312,15 @@
             }
         }
 
-        @media (min-width: 769px) {
+        /* Hide mobile controls on desktop (non-touch devices) */
+        @media (min-width: 769px) and (pointer: fine) {
             .mobile-controls {
                 display: none !important;
             }
         }
 
-        @media (max-width: 768px) {
+        /* Show mobile controls on mobile/tablet devices regardless of orientation */
+        @media (max-width: 768px), (pointer: coarse) {
             .game-container {
                 border: 1px solid #3498db;
             }
@@ -332,6 +341,41 @@
 
             .mobile-controls {
                 display: block;
+            }
+        }
+
+        /* Always show mobile controls in fullscreen mode on touch devices */
+        .game-container.fullscreen .mobile-controls {
+            display: block !important;
+        }
+
+        /* Ensure mobile controls are visible in landscape mode */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .mobile-controls {
+                display: block !important;
+                height: 100px; /* Reduce height in landscape */
+            }
+            
+            .game-container.fullscreen canvas {
+                height: calc(100vh - 120px) !important; /* Account for controls */
+            }
+            
+            .control-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 16px;
+            }
+            
+            .control-group.movement {
+                grid-template-columns: repeat(3, 45px);
+                grid-template-rows: repeat(3, 45px);
+                gap: 3px;
+                bottom: 15px;
+            }
+            
+            .control-group.attack {
+                bottom: 15px;
+                gap: 10px;
             }
         }
 
