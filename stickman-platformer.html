@@ -68,6 +68,26 @@
             color: #f39c12;
         }
 
+        .level-display {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px #000;
+            color: #3498db;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 2px solid #3498db;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+            text-align: center;
+            min-width: 120px;
+            display: none;
+        }
+
         .menu {
             position: absolute;
             top: 50%;
@@ -189,6 +209,13 @@
                 max-width: 600px;
                 max-height: 400px;
             }
+
+            .level-display {
+                top: 10px;
+                font-size: 16px;
+                padding: 6px 15px;
+                min-width: 100px;
+            }
         }
 
         .instructions {
@@ -207,10 +234,13 @@
         <div class="ui">
             <div id="livesDisplay">❤️❤️❤️</div>
             <div id="arrowsDisplay">🏹 × <span id="arrows">10</span></div>
-            <div>🎯 Level: <span id="level">1</span></div>
             <div id="swordDisplay">⚔️ ★</div>
             <div id="bowDisplay">🏹 ★</div>
             <div id="armorDisplay">🛡️</div>
+        </div>
+
+        <div class="level-display" id="levelDisplay">
+            🎯 Level <span id="level">1</span>
         </div>
 
         <div class="menu" id="mainMenu">
@@ -328,6 +358,7 @@
                 this.health = gameState.lives;
                 this.facing = 1; // 1 = right, -1 = left
                 this.attackCooldown = 0;
+                this.attackType = null; // 'sword' or 'bow'
                 this.invulnerable = 0;
             }
 
@@ -387,7 +418,12 @@
                 }
 
                 // Update cooldowns
-                if (this.attackCooldown > 0) this.attackCooldown--;
+                if (this.attackCooldown > 0) {
+                    this.attackCooldown--;
+                    if (this.attackCooldown === 0) {
+                        this.attackType = null; // Clear attack type when cooldown ends
+                    }
+                }
                 if (this.invulnerable > 0) this.invulnerable--;
 
                 // Reset touch controls
@@ -399,6 +435,7 @@
                 if (this.attackCooldown > 0) return;
                 
                 this.attackCooldown = 15; // Faster animation
+                this.attackType = 'sword'; // Set attack type for animation
                 
                 // Check for enemies in the sword's reach (fencing style with arm extension)
                 const swordLength = 30; // Constant sword length
@@ -432,6 +469,7 @@
                 if (this.attackCooldown > 0 || gameState.arrows <= 0) return;
                 
                 this.attackCooldown = 20;
+                this.attackType = 'bow'; // Set attack type for animation
                 gameState.arrows--;
                 
                 // Create arrow projectile
@@ -596,6 +634,91 @@
                 ctx.restore();
             }
 
+            drawBow(weaponY) {
+                ctx.save();
+                
+                // Calculate bow position and animation
+                const bowLength = 25;
+                const stringLength = 20;
+                const attackProgress = (20 - this.attackCooldown) / 20; // 0 to 1
+                
+                // Bow pull animation - string pulls back
+                const pullDistance = Math.sin(attackProgress * Math.PI) * 8;
+                const baseDistance = 10;
+                
+                // Position bow at stickman's extended arm
+                const bowX = this.x + this.width/2 + (this.facing * (baseDistance + pullDistance));
+                const bowY = weaponY;
+                
+                // Draw bow frame (curved wooden bow)
+                ctx.strokeStyle = '#8B4513'; // Brown wood
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                
+                if (this.facing === 1) {
+                    // Facing right - bow curves
+                    ctx.arc(bowX + 5, bowY, bowLength/2, -Math.PI/2, Math.PI/2, false);
+                } else {
+                    // Facing left - bow curves
+                    ctx.arc(bowX - 5, bowY, bowLength/2, Math.PI/2, -Math.PI/2, false);
+                }
+                ctx.stroke();
+                
+                // Draw bow string
+                ctx.strokeStyle = '#F5F5DC'; // Beige string
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                
+                if (this.facing === 1) {
+                    // String from top to bottom of bow, pulled back during attack
+                    const stringX = bowX + 5 - pullDistance;
+                    ctx.moveTo(bowX + 5, bowY - bowLength/2);
+                    ctx.lineTo(stringX, bowY);
+                    ctx.lineTo(bowX + 5, bowY + bowLength/2);
+                } else {
+                    // String from top to bottom of bow, pulled back during attack
+                    const stringX = bowX - 5 + pullDistance;
+                    ctx.moveTo(bowX - 5, bowY - bowLength/2);
+                    ctx.lineTo(stringX, bowY);
+                    ctx.lineTo(bowX - 5, bowY + bowLength/2);
+                }
+                ctx.stroke();
+                
+                // Draw arrow on string during pull
+                if (attackProgress > 0.1 && attackProgress < 0.8) {
+                    ctx.fillStyle = '#8B4513'; // Brown arrow shaft
+                    const arrowX = this.facing === 1 ? bowX + 5 - pullDistance : bowX - 5 + pullDistance;
+                    
+                    // Arrow shaft
+                    ctx.fillRect(arrowX - 2, bowY - 1, 8 * this.facing, 2);
+                    
+                    // Arrow tip
+                    ctx.fillStyle = '#C0C0C0'; // Silver tip
+                    ctx.fillRect(arrowX + (6 * this.facing), bowY - 1.5, 3 * this.facing, 3);
+                    
+                    // Arrow fletching
+                    ctx.fillStyle = '#FF6B6B'; // Red feathers
+                    ctx.fillRect(arrowX - (3 * this.facing), bowY - 2, 2 * this.facing, 4);
+                }
+                
+                // Draw extended arm
+                if (attackProgress > 0.1) {
+                    ctx.fillStyle = '#2c3e50'; // Same color as stickman
+                    const armStartX = this.x + this.width/2 + (this.facing * 8);
+                    const armEndX = bowX;
+                    const armWidth = 3;
+                    
+                    ctx.fillRect(
+                        Math.min(armStartX, armEndX) - armWidth/2, 
+                        bowY - armWidth/2, 
+                        Math.abs(armEndX - armStartX) + armWidth, 
+                        armWidth
+                    );
+                }
+                
+                ctx.restore();
+            }
+
             draw() {
                 ctx.save();
                 
@@ -640,9 +763,13 @@
                 ctx.arc(this.x + this.width/2, headY, 8, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // Sword animation
+                // Weapon animation based on attack type
                 if (this.attackCooldown > 0) {
-                    this.drawSword(weaponY);
+                    if (this.attackType === 'sword') {
+                        this.drawSword(weaponY);
+                    } else if (this.attackType === 'bow') {
+                        this.drawBow(weaponY);
+                    }
                 }
                 
                 ctx.restore();
@@ -1320,12 +1447,14 @@
             
             generateLevel(1);
             hideAllMenus();
+            showLevelDisplay();
             updateUI();
             gameLoop();
         }
 
         function levelComplete() {
             gameState.current = 'upgrade';
+            hideLevelDisplay();
             document.getElementById('upgradeMenu').style.display = 'block';
         }
 
@@ -1346,11 +1475,13 @@
             generateLevel(gameState.level);
             gameState.current = 'playing';
             hideAllMenus();
+            showLevelDisplay();
             updateUI();
         }
 
         function gameOver() {
             gameState.current = 'gameOver';
+            hideLevelDisplay();
             document.getElementById('gameOverMenu').style.display = 'block';
         }
 
@@ -1361,6 +1492,7 @@
         function goHome() {
             gameState.current = 'menu';
             hideAllMenus();
+            hideLevelDisplay();
             document.getElementById('mainMenu').style.display = 'block';
         }
 
@@ -1383,6 +1515,14 @@
             document.getElementById('instructionsMenu').style.display = 'none';
             document.getElementById('upgradeMenu').style.display = 'none';
             document.getElementById('gameOverMenu').style.display = 'none';
+        }
+
+        function showLevelDisplay() {
+            document.getElementById('levelDisplay').style.display = 'block';
+        }
+
+        function hideLevelDisplay() {
+            document.getElementById('levelDisplay').style.display = 'none';
         }
 
         function updateUI() {
