@@ -363,6 +363,15 @@
             }
 
             update() {
+                // Don't process input if entering door
+                if (door && door.playerEntering) {
+                    // Reset touch controls to prevent continued actions
+                    touchControls.sword = false;
+                    touchControls.bow = false;
+                    // Skip normal update logic during door entering
+                    return;
+                }
+                
                 // Handle input
                 this.crouching = keys['s'] || keys['ArrowDown'] || touchControls.crouch;
                 
@@ -725,6 +734,11 @@
                 // Flash when invulnerable
                 if (this.invulnerable > 0 && Math.floor(this.invulnerable / 5) % 2) {
                     ctx.globalAlpha = 0.5;
+                }
+                
+                // Fade out when entering door
+                if (door && door.playerEntering) {
+                    ctx.globalAlpha = Math.max(0, 1 - door.enterProgress);
                 }
                 
                 ctx.fillStyle = '#2c3e50';
@@ -1277,14 +1291,94 @@
                 this.width = 30;
                 this.height = 50;
                 this.glowOffset = 0;
+                this.isOpening = false;
+                this.isOpen = false;
+                this.openProgress = 0;
+                this.playerEntering = false;
+                this.enterProgress = 0;
             }
 
             update() {
                 this.glowOffset += 0.1;
                 
+                // Handle door opening animation
+                if (this.isOpening && !this.isOpen) {
+                    this.openProgress += 0.05;
+                    
+                    // Add sparkle particles during opening
+                    if (Math.random() < 0.3) {
+                        particles.push(new Particle(
+                            this.x + Math.random() * this.width,
+                            this.y + Math.random() * this.height,
+                            Math.random() * 4 - 2,
+                            Math.random() * 4 - 2,
+                            '#3498db',
+                            30
+                        ));
+                    }
+                    
+                    if (this.openProgress >= 1) {
+                        this.openProgress = 1;
+                        this.isOpen = true;
+                        this.playerEntering = true;
+                        
+                        // Create burst of particles when door fully opens
+                        for (let i = 0; i < 15; i++) {
+                            particles.push(new Particle(
+                                this.x + this.width/2,
+                                this.y + this.height/2,
+                                Math.random() * 8 - 4,
+                                Math.random() * 8 - 4,
+                                Math.random() > 0.5 ? '#3498db' : '#f39c12',
+                                40
+                            ));
+                        }
+                    }
+                }
+                
+                // Handle player entering animation
+                if (this.playerEntering) {
+                    this.enterProgress += 0.03;
+                    // Move player towards door center
+                    const targetX = this.x + this.width/2 - player.width/2;
+                    player.x += (targetX - player.x) * 0.1;
+                    
+                    // Add magical particles around player while entering
+                    if (Math.random() < 0.5) {
+                        particles.push(new Particle(
+                            player.x + Math.random() * player.width,
+                            player.y + Math.random() * player.height,
+                            Math.random() * 6 - 3,
+                            Math.random() * 6 - 3,
+                            Math.random() > 0.5 ? '#3498db' : '#ffffff',
+                            25
+                        ));
+                    }
+                    
+                    // Fade player out
+                    if (this.enterProgress >= 1) {
+                        // Create final burst of particles
+                        for (let i = 0; i < 10; i++) {
+                            particles.push(new Particle(
+                                player.x + player.width/2,
+                                player.y + player.height/2,
+                                Math.random() * 8 - 4,
+                                Math.random() * 8 - 4,
+                                '#ffffff',
+                                30
+                            ));
+                        }
+                        
+                        // Complete the level transition
+                        setTimeout(() => {
+                            levelComplete();
+                        }, 500);
+                    }
+                }
+                
                 // Check collision with player
-                if (this.collidesWith(player)) {
-                    levelComplete();
+                if (this.collidesWith(player) && !this.isOpening) {
+                    this.isOpening = true;
                 }
             }
 
@@ -1301,17 +1395,69 @@
                 ctx.shadowColor = '#3498db';
                 ctx.shadowBlur = 10 * glow;
                 
-                ctx.fillStyle = '#2c3e50';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                
-                ctx.fillStyle = '#3498db';
-                ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, this.height - 10);
-                
-                // Door handle
-                ctx.fillStyle = '#f39c12';
-                ctx.beginPath();
-                ctx.arc(this.x + this.width - 8, this.y + this.height/2, 3, 0, Math.PI * 2);
-                ctx.fill();
+                if (!this.isOpen) {
+                    // Draw closed door
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                    
+                    ctx.fillStyle = '#3498db';
+                    ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, this.height - 10);
+                    
+                    // Door handle
+                    ctx.fillStyle = '#f39c12';
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width - 8, this.y + this.height/2, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Draw opened door
+                    ctx.fillStyle = '#2c3e50';
+                    
+                    // Door frame
+                    ctx.fillRect(this.x, this.y, 5, this.height); // Left frame
+                    ctx.fillRect(this.x + this.width - 5, this.y, 5, this.height); // Right frame
+                    ctx.fillRect(this.x, this.y, this.width, 5); // Top frame
+                    ctx.fillRect(this.x, this.y + this.height - 5, this.width, 5); // Bottom frame
+                    
+                    // Open doorway (dark interior)
+                    ctx.fillStyle = '#1a1a1a';
+                    ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, this.height - 10);
+                    
+                    // Add depth effect to doorway
+                    ctx.fillStyle = '#0d0d0d';
+                    ctx.fillRect(this.x + 7, this.y + 7, this.width - 14, this.height - 14);
+                    
+                    // Door panels (opened to the sides)
+                    const doorPanelWidth = (this.width - 10) / 2;
+                    const openOffset = this.openProgress * 15;
+                    
+                    // Left door panel
+                    ctx.fillStyle = '#3498db';
+                    ctx.fillRect(this.x + 5 - openOffset, this.y + 5, doorPanelWidth, this.height - 10);
+                    
+                    // Right door panel  
+                    ctx.fillRect(this.x + 5 + doorPanelWidth + openOffset, this.y + 5, doorPanelWidth, this.height - 10);
+                    
+                    // Door handles on opened panels
+                    ctx.fillStyle = '#f39c12';
+                    ctx.beginPath();
+                    ctx.arc(this.x + 5 + doorPanelWidth - 3 - openOffset, this.y + this.height/2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(this.x + 5 + doorPanelWidth + 3 + openOffset, this.y + this.height/2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Magical sparkles around the doorway
+                    for (let i = 0; i < 5; i++) {
+                        const sparkleX = this.x + 5 + Math.random() * (this.width - 10);
+                        const sparkleY = this.y + 5 + Math.random() * (this.height - 10);
+                        const sparkleSize = Math.random() * 2 + 1;
+                        
+                        ctx.fillStyle = `rgba(52, 152, 219, ${Math.random() * 0.8 + 0.2})`;
+                        ctx.beginPath();
+                        ctx.arc(sparkleX, sparkleY, sparkleSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
                 
                 ctx.shadowBlur = 0;
             }
