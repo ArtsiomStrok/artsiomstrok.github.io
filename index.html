@@ -312,7 +312,7 @@
     <div class="container">
         <header>
             <h1>🎮 HTML5 Games Store</h1>
-            <p class="subtitle">Discover and play amazing browser games</p>
+            <p class="subtitle">Play fully-featured browser games instantly</p>
         </header>
 
         <div class="controls">
@@ -357,7 +357,7 @@
     </div>
 
     <script>
-        // Sample games data
+        // Playable games data
         const games = [
             {
                 id: 1,
@@ -365,103 +365,15 @@
                 category: "shooter",
                 description: "Defend Earth from alien invaders in this classic space shooter. Use your laser cannons to destroy enemy ships and collect power-ups.",
                 thumbnail: "🚀",
-                fullDescription: "An action-packed space shooter where you pilot a advanced starfighter against waves of alien enemies. Features multiple weapon types, boss battles, and stunning visual effects. Navigate through asteroid fields and enemy formations while collecting power-ups to enhance your ship's capabilities."
+                fullDescription: "An action-packed space shooter where you pilot an advanced starfighter against waves of alien enemies. Features multiple weapon types, power-up system, and stunning visual effects. Navigate through asteroid fields and enemy formations while collecting power-ups to enhance your ship's capabilities. Includes multi-shot spreads, damage boosts, speed enhancements, and health restoration. Mobile-friendly with touch controls and fullscreen support."
             },
             {
                 id: 2,
-                title: "Puzzle Master",
-                category: "puzzle",
-                description: "Challenge your mind with increasingly difficult puzzles and brain teasers.",
-                thumbnail: "🧩",
-                fullDescription: "Exercise your brain with over 100 handcrafted puzzles ranging from simple logic problems to complex multi-step challenges. Features hint system, progress tracking, and daily challenges to keep you engaged."
-            },
-            {
-                id: 3,
-                title: "Racing Thunder",
-                category: "racing",
-                description: "High-speed racing through dynamic tracks with realistic physics.",
-                thumbnail: "🏎️",
-                fullDescription: "Experience the thrill of high-speed racing with realistic car physics and dynamic weather conditions. Race through city streets, mountain roads, and desert highways. Customize your vehicle and compete in championship mode."
-            },
-            {
-                id: 4,
-                title: "Medieval Quest",
-                category: "rpg",
-                description: "Embark on an epic adventure in a fantasy medieval world.",
-                thumbnail: "⚔️",
-                fullDescription: "Begin your journey as a young warrior in a vast medieval kingdom. Complete quests, battle monsters, level up your character, and uncover the mysteries of ancient magic. Features deep character customization and branching storylines."
-            },
-            {
-                id: 5,
-                title: "Retro Arcade",
-                category: "arcade",
-                description: "Classic arcade action with modern twists and power-ups.",
-                thumbnail: "🕹️",
-                fullDescription: "Relive the golden age of arcade gaming with this modern take on classic gameplay. Features pixel-perfect graphics, chiptune soundtrack, and addictive gameplay that's easy to learn but hard to master."
-            },
-            {
-                id: 6,
-                title: "Tower Defense Pro",
-                category: "strategy",
-                description: "Build and upgrade towers to defend against enemy waves.",
-                thumbnail: "🏰",
-                fullDescription: "Strategic tower defense gameplay with multiple tower types, upgrade paths, and enemy varieties. Plan your defense strategy carefully as enemies become more challenging with each wave. Features campaign mode and endless survival challenges."
-            },
-            {
-                id: 7,
-                title: "Neon Runner",
-                category: "arcade",
-                description: "Run through neon-lit cyberpunk cities while avoiding obstacles.",
-                thumbnail: "🌟",
-                fullDescription: "Sprint through futuristic neon-lit landscapes in this endless runner. Jump, slide, and dash through obstacles while collecting energy cores. Features multiple characters, power-ups, and unlockable cyberpunk environments."
-            },
-            {
-                id: 8,
-                title: "Dungeon Crawler",
-                category: "rpg",
-                description: "Explore dark dungeons filled with treasures and monsters.",
-                thumbnail: "🗝️",
-                fullDescription: "Venture into procedurally generated dungeons filled with treasure, traps, and terrifying monsters. Collect rare loot, craft powerful equipment, and uncover the secrets hidden in the depths below."
-            },
-            {
-                id: 9,
-                title: "Block Blaster",
-                category: "puzzle",
-                description: "Match colored blocks to clear the board in this addictive puzzle game.",
-                thumbnail: "🎯",
-                fullDescription: "A modern twist on classic block-matching gameplay. Create combinations, trigger chain reactions, and use special power blocks to clear challenging levels. Features over 200 levels with unique mechanics and obstacles."
-            },
-            {
-                id: 10,
-                title: "Sky Racer",
-                category: "racing",
-                description: "Race through the clouds in high-speed aerial vehicles.",
-                thumbnail: "✈️",
-                fullDescription: "Take to the skies in this thrilling aerial racing game. Navigate through cloud formations, avoid obstacles, and use boost pads to gain speed. Features multiple aircraft types and challenging sky-high race tracks."
-            },
-            {
-                id: 11,
-                title: "Alien Invasion",
-                category: "shooter",
-                description: "Defend your base from waves of alien attackers.",
-                thumbnail: "👽",
-                fullDescription: "Command Earth's last defense against an alien invasion. Deploy troops, build defensive structures, and use powerful weapons to repel the extraterrestrial threat. Features multiple alien types and epic boss battles."
-            },
-            {
-                id: 12,
-                title: "Empire Builder",
-                category: "strategy",
-                description: "Build and manage your own civilization from the ground up.",
-                thumbnail: "🏛️",
-                fullDescription: "Start with a small settlement and grow it into a mighty empire. Manage resources, research technologies, build armies, and engage in diplomacy with other civilizations. Features multiple victory conditions and replay value."
-            },
-            {
-                id: 13,
                 title: "Stickman Platformer",
                 category: "arcade",
                 description: "Navigate through dangerous levels as a stickman warrior with sword and bow combat.",
                 thumbnail: "🏃",
-                fullDescription: "Guide your stickman hero through challenging platformer levels filled with enemies, hazards, and obstacles. Use your sword for melee combat and bow for ranged attacks. Collect power-ups, avoid lava and spikes, defeat enemies, and upgrade your gear between levels. Features progressive difficulty, multiple enemy types, and an upgrade system for weapons and armor."
+                fullDescription: "Guide your stickman hero through challenging platformer levels filled with enemies, hazards, and obstacles. Use your sword for melee combat and bow for ranged attacks. Collect power-ups, avoid lava and spikes, defeat enemies, and upgrade your gear between levels. Features progressive difficulty, multiple enemy types, and an upgrade system for weapons and armor. Includes environmental hazards like TNT explosions and moving platforms."
             }
         ];
 
@@ -577,20 +489,16 @@
         // Play game function
         function playGame(game) {
             if (game.title === "Space Shooter") {
-                // Open the actual space shooter game
+                // Open the space shooter game
                 window.location.href = 'space-shooter.html';
                 return;
             }
             
             if (game.title === "Stickman Platformer") {
-                // Open the actual stickman platformer game
+                // Open the stickman platformer game
                 window.location.href = 'stickman-platformer.html';
                 return;
             }
-            
-            // For other games, show placeholder message
-            alert(`🎮 Starting "${game.title}"!\n\nThis is a demo storefront. In a real implementation, this would:\n• Open the game in a new window/tab\n• Load the game files\n• Initialize the game engine\n• Track play statistics\n\nSpace Shooter and Stickman Platformer are available as playable demos!`);
-            closeGameModal();
         }
 
         // Initialize the application
