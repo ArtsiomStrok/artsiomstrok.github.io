@@ -430,6 +430,7 @@
             <div>Score: <span id="score">0</span></div>
             <div>Lives: <span id="lives">3</span></div>
             <div>Level: <span id="level">1</span></div>
+            <div id="powerups" style="margin-top: 10px; font-size: 12px;"></div>
         </div>
 
         <div class="game-over" id="gameOver">
@@ -514,6 +515,10 @@
                 this.y = canvas.height - this.height - bottomMargin;
                 this.speed = 5;
                 this.health = 3;
+                this.projectileCount = 1; // Number of projectiles fired at once
+                this.projectilePower = 1; // Damage multiplier
+                this.speedBoostEndTime = 0; // When speed boost expires
+                this.originalShotCooldown = shotCooldown;
             }
 
             update() {
@@ -534,15 +539,42 @@
                     this.y += this.speed;
                 }
 
+                // Check if speed boost expired
+                if (Date.now() > this.speedBoostEndTime && this.speedBoostEndTime > 0) {
+                    this.speedBoostEndTime = 0;
+                }
+
+                // Calculate current shot cooldown (with speed boost)
+                const currentCooldown = this.speedBoostEndTime > 0 ? this.originalShotCooldown * 0.5 : this.originalShotCooldown;
+
                 // Shooting
-                if ((keys[' '] || isShooting) && Date.now() - lastShot > shotCooldown) {
+                if ((keys[' '] || isShooting) && Date.now() - lastShot > currentCooldown) {
                     this.shoot();
                     lastShot = Date.now();
                 }
             }
 
             shoot() {
-                bullets.push(new Bullet(this.x + this.width / 2 - 2, this.y, -8, '#00ffff', 'player'));
+                if (this.projectileCount === 1) {
+                    // Single shot
+                    bullets.push(new Bullet(this.x + this.width / 2 - 2, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                } else if (this.projectileCount === 2) {
+                    // Double shot
+                    bullets.push(new Bullet(this.x + this.width / 2 - 8, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(this.x + this.width / 2 + 4, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                } else if (this.projectileCount === 3) {
+                    // Triple shot
+                    bullets.push(new Bullet(this.x + this.width / 2 - 12, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(this.x + this.width / 2 - 2, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                    bullets.push(new Bullet(this.x + this.width / 2 + 8, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                } else {
+                    // Quad shot and beyond
+                    const spread = 6;
+                    const startX = this.x + this.width / 2 - (this.projectileCount - 1) * spread / 2;
+                    for (let i = 0; i < this.projectileCount; i++) {
+                        bullets.push(new Bullet(startX + i * spread - 2, this.y, -8, '#00ffff', 'player', this.projectilePower));
+                    }
+                }
             }
 
             draw() {
@@ -591,14 +623,21 @@
 
         // Bullet class
         class Bullet {
-            constructor(x, y, speed, color, owner) {
+            constructor(x, y, speed, color, owner, power = 1) {
                 this.x = x;
                 this.y = y;
                 this.speed = speed;
                 this.color = color;
                 this.owner = owner;
+                this.power = power; // Damage multiplier
                 this.width = 4;
                 this.height = 10;
+                
+                // Visual enhancement for powered bullets
+                if (this.power > 1) {
+                    this.width = Math.min(6, 4 + this.power);
+                    this.height = Math.min(14, 10 + this.power * 2);
+                }
             }
 
             update() {
@@ -609,11 +648,18 @@
                 ctx.fillStyle = this.color;
                 ctx.fillRect(this.x, this.y, this.width, this.height);
                 
-                // Add glow effect
+                // Add enhanced glow effect for powered bullets
+                const glowIntensity = this.power > 1 ? 15 + this.power * 5 : 10;
                 ctx.shadowColor = this.color;
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = glowIntensity;
                 ctx.fillRect(this.x, this.y, this.width, this.height);
                 ctx.shadowBlur = 0;
+                
+                // Add power indicator for enhanced bullets
+                if (this.power > 1) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.fillRect(this.x + 1, this.y + 1, this.width - 2, this.height - 2);
+                }
             }
 
             isOffScreen() {
@@ -652,7 +698,7 @@
                 // Enemy shooting
                 this.shootTimer++;
                 if (this.shootTimer > this.shootInterval && Math.random() < 0.01) {
-                    bullets.push(new Bullet(this.x + this.width / 2 - 2, this.y + this.height, 4, '#ff4444', 'enemy'));
+                    bullets.push(new Bullet(this.x + this.width / 2 - 2, this.y + this.height, 4, '#ff4444', 'enemy', 1));
                     this.shootTimer = 0;
                 }
             }
@@ -676,8 +722,8 @@
                 }
             }
 
-            takeDamage() {
-                this.health--;
+            takeDamage(damage = 1) {
+                this.health -= damage;
                 if (this.health <= 0) {
                     // Award points
                     let points = this.type === 'fast' ? 20 : this.type === 'tank' ? 50 : 10;
@@ -696,8 +742,10 @@
                     }
                     
                     // Chance to drop power-up
-                    if (Math.random() < 0.1) {
-                        powerups.push(new PowerUp(this.x + this.width / 2, this.y + this.height / 2));
+                    if (Math.random() < 0.15) { // Slightly increased drop rate
+                        const powerUpTypes = ['health', 'multishot', 'speed', 'power'];
+                        const randomType = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+                        powerups.push(new PowerUp(this.x + this.width / 2, this.y + this.height / 2, randomType));
                     }
                     
                     return true;
@@ -712,13 +760,37 @@
 
         // PowerUp class
         class PowerUp {
-            constructor(x, y) {
+            constructor(x, y, type = 'health') {
                 this.x = x;
                 this.y = y;
                 this.width = 20;
                 this.height = 20;
                 this.speed = 2;
                 this.rotation = 0;
+                this.type = type; // 'health', 'multishot', 'speed', 'power'
+                
+                // Set colors based on type
+                switch(this.type) {
+                    case 'health':
+                        this.color = '#00ff00'; // Green
+                        this.symbol = '+';
+                        break;
+                    case 'multishot':
+                        this.color = '#ff0000'; // Red
+                        this.symbol = '◊';
+                        break;
+                    case 'speed':
+                        this.color = '#0080ff'; // Blue
+                        this.symbol = '⚡';
+                        break;
+                    case 'power':
+                        this.color = '#8000ff'; // Purple
+                        this.symbol = '★';
+                        break;
+                    default:
+                        this.color = '#00ff00';
+                        this.symbol = '+';
+                }
             }
 
             update() {
@@ -730,11 +802,22 @@
                 ctx.save();
                 ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
                 ctx.rotate(this.rotation);
-                ctx.fillStyle = '#00ff00';
+                
+                // Draw box
+                ctx.fillStyle = this.color;
                 ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(-this.width / 4, -this.height / 4, this.width / 2, this.height / 2);
+                
+                // Draw inner highlight
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fillRect(-this.width / 3, -this.height / 3, this.width * 2/3, this.height * 2/3);
+                
+                // Draw symbol
                 ctx.restore();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.symbol, this.x + this.width / 2, this.y + this.height / 2);
             }
 
             isOffScreen() {
@@ -852,7 +935,7 @@
                     for (let j = enemies.length - 1; j >= 0; j--) {
                         if (checkCollision(bullet, enemies[j])) {
                             bullets.splice(i, 1);
-                            if (enemies[j].takeDamage()) {
+                            if (enemies[j].takeDamage(bullet.power)) {
                                 enemies.splice(j, 1);
                             }
                             break;
@@ -899,12 +982,39 @@
                 // Power-up vs player collision
                 if (checkCollision(powerup, player)) {
                     powerups.splice(i, 1);
-                    // Apply power-up effect (heal player)
-                    if (player.health < 3) {
-                        player.health++;
-                        gameState.lives = player.health;
+                    
+                    // Apply power-up effect based on type
+                    switch(powerup.type) {
+                        case 'health':
+                            if (player.health < 3) {
+                                player.health++;
+                                gameState.lives = player.health;
+                            }
+                            break;
+                        case 'multishot':
+                            player.projectileCount = Math.min(player.projectileCount + 1, 5); // Max 5 projectiles
+                            break;
+                        case 'speed':
+                            player.speedBoostEndTime = Date.now() + 5000; // 5 seconds
+                            break;
+                        case 'power':
+                            player.projectilePower = Math.min(player.projectilePower + 1, 5); // Max 5x power
+                            break;
                     }
+                    
                     gameState.score += 100;
+                    
+                    // Create visual feedback particles
+                    for (let p = 0; p < 10; p++) {
+                        particles.push(new Particle(
+                            powerup.x + powerup.width / 2,
+                            powerup.y + powerup.height / 2,
+                            (Math.random() - 0.5) * 6,
+                            (Math.random() - 0.5) * 6,
+                            powerup.color,
+                            30
+                        ));
+                    }
                 }
             }
 
@@ -936,6 +1046,25 @@
             document.getElementById('score').textContent = gameState.score;
             document.getElementById('lives').textContent = gameState.lives;
             document.getElementById('level').textContent = gameState.level;
+            
+            // Update power-up status
+            const powerupsDiv = document.getElementById('powerups');
+            let powerupText = [];
+            
+            if (player && player.projectileCount > 1) {
+                powerupText.push(`🔴 Multi-Shot x${player.projectileCount}`);
+            }
+            
+            if (player && player.projectilePower > 1) {
+                powerupText.push(`🟣 Power x${player.projectilePower}`);
+            }
+            
+            if (player && player.speedBoostEndTime > Date.now()) {
+                const timeLeft = Math.ceil((player.speedBoostEndTime - Date.now()) / 1000);
+                powerupText.push(`🔵 Speed Boost (${timeLeft}s)`);
+            }
+            
+            powerupsDiv.textContent = powerupText.join(' | ');
         }
 
         // Initialize game
@@ -954,6 +1083,13 @@
             powerups = [];
             particles = [];
             initStars();
+            
+            // Reset player power-ups
+            if (player) {
+                player.projectileCount = 1;
+                player.projectilePower = 1;
+                player.speedBoostEndTime = 0;
+            }
             
             gameState.running = true;
             gameState.paused = false;
