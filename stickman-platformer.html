@@ -820,17 +820,148 @@
             }
 
             draw() {
-                ctx.fillStyle = this.type === 'moving' ? '#f39c12' : '#7f8c8d';
+                // Get theme-based colors
+                const themeIndex = ((gameState.level - 1) % 4);
+                let platformColor, strokeColor;
+                
+                switch (themeIndex) {
+                    case 0: // Jungle - wooden logs
+                        if (this.type === 'ground') {
+                            platformColor = '#228B22'; // Grass ground
+                            strokeColor = '#006400';
+                        } else {
+                            platformColor = this.type === 'moving' ? '#D2691E' : '#8B4513';
+                            strokeColor = '#654321';
+                        }
+                        break;
+                    case 1: // Desert - sandstone
+                        if (this.type === 'ground') {
+                            platformColor = '#DEB887'; // Sandy ground
+                            strokeColor = '#D2691E';
+                        } else {
+                            platformColor = this.type === 'moving' ? '#F4A460' : '#CD853F';
+                            strokeColor = '#A0522D';
+                        }
+                        break;
+                    case 2: // Volcano - dark rock
+                        if (this.type === 'ground') {
+                            platformColor = '#8B0000'; // Volcanic ground
+                            strokeColor = '#FF4500';
+                        } else {
+                            platformColor = this.type === 'moving' ? '#8B0000' : '#2F1B14';
+                            strokeColor = '#1C1C1C';
+                        }
+                        break;
+                    case 3: // Ice - frozen platforms
+                        if (this.type === 'ground') {
+                            platformColor = '#F0F8FF'; // Snow ground
+                            strokeColor = '#87CEEB';
+                        } else {
+                            platformColor = this.type === 'moving' ? '#B0E0E6' : '#E0F6FF';
+                            strokeColor = '#4682B4';
+                        }
+                        break;
+                    default: // Default
+                        platformColor = this.type === 'moving' ? '#f39c12' : '#7f8c8d';
+                        strokeColor = '#34495e';
+                        break;
+                }
+                
+                ctx.fillStyle = platformColor;
                 ctx.fillRect(this.x, this.y, this.width, this.height);
                 
-                // Add texture
-                ctx.strokeStyle = '#34495e';
+                // Add themed texture
+                ctx.strokeStyle = strokeColor;
                 ctx.lineWidth = 2;
-                for (let i = 0; i < this.width; i += 20) {
-                    ctx.beginPath();
-                    ctx.moveTo(this.x + i, this.y);
-                    ctx.lineTo(this.x + i, this.y + this.height);
-                    ctx.stroke();
+                
+                if (this.type === 'ground') {
+                    // Special ground textures for each theme
+                    if (themeIndex === 0) {
+                        // Jungle ground - grass blades
+                        ctx.strokeStyle = '#006400';
+                        ctx.lineWidth = 1;
+                        for (let i = 0; i < this.width; i += 8) {
+                            ctx.beginPath();
+                            ctx.moveTo(this.x + i, this.y + this.height);
+                            ctx.lineTo(this.x + i + 2, this.y);
+                            ctx.stroke();
+                        }
+                    } else if (themeIndex === 1) {
+                        // Desert ground - sand dunes
+                        ctx.strokeStyle = '#D2691E';
+                        ctx.lineWidth = 2;
+                        for (let i = 0; i < this.width; i += 20) {
+                            ctx.beginPath();
+                            ctx.moveTo(this.x + i, this.y + 10);
+                            ctx.quadraticCurveTo(this.x + i + 10, this.y, this.x + i + 20, this.y + 10);
+                            ctx.stroke();
+                        }
+                    } else if (themeIndex === 2) {
+                        // Volcano ground - lava cracks
+                        ctx.strokeStyle = '#FF4500';
+                        ctx.lineWidth = 3;
+                        for (let i = 0; i < this.width; i += 30) {
+                            ctx.beginPath();
+                            ctx.moveTo(this.x + i, this.y);
+                            ctx.lineTo(this.x + i + 15, this.y + this.height);
+                            ctx.stroke();
+                        }
+                    } else if (themeIndex === 3) {
+                        // Ice ground - snow drifts
+                        ctx.strokeStyle = '#87CEEB';
+                        ctx.lineWidth = 2;
+                        for (let i = 0; i < this.width; i += 15) {
+                            ctx.beginPath();
+                            ctx.moveTo(this.x + i, this.y + 5);
+                            ctx.quadraticCurveTo(this.x + i + 7, this.y, this.x + i + 15, this.y + 5);
+                            ctx.stroke();
+                        }
+                    }
+                } else if (themeIndex === 0) {
+                    // Jungle - wood grain
+                    for (let i = 0; i < this.width; i += 15) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.x + i, this.y);
+                        ctx.lineTo(this.x + i, this.y + this.height);
+                        ctx.stroke();
+                    }
+                } else if (themeIndex === 1) {
+                    // Desert - sand layers
+                    for (let i = 0; i < this.height; i += 8) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.x, this.y + i);
+                        ctx.lineTo(this.x + this.width, this.y + i);
+                        ctx.stroke();
+                    }
+                } else if (themeIndex === 2) {
+                    // Volcano - rock cracks
+                    ctx.strokeStyle = '#FF4500';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < this.width; i += 25) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.x + i, this.y + 2);
+                        ctx.lineTo(this.x + i + 8, this.y + this.height - 2);
+                        ctx.stroke();
+                    }
+                } else if (themeIndex === 3) {
+                    // Ice - crystal patterns
+                    ctx.strokeStyle = '#F0F8FF';
+                    ctx.lineWidth = 1;
+                    for (let i = 0; i < this.width; i += 12) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.x + i, this.y);
+                        ctx.lineTo(this.x + i + 6, this.y + this.height/2);
+                        ctx.lineTo(this.x + i + 12, this.y);
+                        ctx.stroke();
+                    }
+                } else {
+                    // Default texture
+                    for (let i = 0; i < this.width; i += 20) {
+                        ctx.beginPath();
+                        ctx.moveTo(this.x + i, this.y);
+                        ctx.lineTo(this.x + i, this.y + this.height);
+                        ctx.stroke();
+                    }
                 }
             }
         }
@@ -1343,15 +1474,14 @@
             }
         }
 
-        // Hazard class (lava, spikes, TNT)
+        // Hazard class (lava, spikes)
         class Hazard {
             constructor(x, y, width, height, type) {
                 this.x = x;
                 this.y = y;
                 this.width = width;
                 this.height = height;
-                this.type = type; // 'lava', 'spikes', 'tnt'
-                this.triggered = false;
+                this.type = type; // 'lava', 'spikes', 'quicksand', 'ice_spikes'
             }
 
             update() {
@@ -1362,45 +1492,11 @@
                         player.takeDamage(3); // Sinks in quicksand
                     } else if (this.type === 'spikes' || this.type === 'ice_spikes') {
                         player.takeDamage(2);
-                    } else if (this.type === 'tnt' && !this.triggered) {
-                        this.explode();
                     }
                 }
             }
 
-            explode() {
-                this.triggered = true;
-                
-                // Damage player if in range
-                const distance = Math.sqrt(
-                    Math.pow(player.x + player.width/2 - (this.x + this.width/2), 2) +
-                    Math.pow(player.y + player.height/2 - (this.y + this.height/2), 2)
-                );
-                
-                if (distance < 80) {
-                    player.takeDamage(2);
-                }
-                
-                // Create explosion effect
-                for (let i = 0; i < 20; i++) {
-                    particles.push(new Particle(
-                        this.x + this.width/2,
-                        this.y + this.height/2,
-                        Math.random() * 12 - 6,
-                        Math.random() * 12 - 6,
-                        Math.random() > 0.5 ? '#e74c3c' : '#f39c12',
-                        60
-                    ));
-                }
-                
-                // Remove TNT
-                setTimeout(() => {
-                    const index = hazards.indexOf(this);
-                    if (index > -1) {
-                        hazards.splice(index, 1);
-                    }
-                }, 100);
-            }
+
 
             collidesWith(obj) {
                 return this.x < obj.x + obj.width &&
@@ -1464,16 +1560,6 @@
                             ctx.fillStyle = '#F0F8FF';
                             ctx.fillRect(this.x + i + 1, this.y + 2, 1, this.height - 7);
                             ctx.fillStyle = '#B0E0E6';
-                        }
-                        break;
-                    case 'tnt':
-                        if (!this.triggered) {
-                            ctx.fillStyle = '#8e44ad';
-                            ctx.fillRect(this.x, this.y, this.width, this.height);
-                            ctx.fillStyle = 'white';
-                            ctx.font = '12px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.fillText('TNT', this.x + this.width/2, this.y + this.height/2 + 4);
                         }
                         break;
                 }
@@ -1587,27 +1673,91 @@
             }
 
             draw() {
+                // Get theme-based colors
+                const themeIndex = ((gameState.level - 1) % 4);
+                let frameColor, doorColor, glowColor, handleColor;
+                
+                switch (themeIndex) {
+                    case 0: // Jungle - wooden door
+                        frameColor = '#654321';
+                        doorColor = '#8B4513';
+                        glowColor = '#32CD32';
+                        handleColor = '#DAA520';
+                        break;
+                    case 1: // Desert - sandstone door
+                        frameColor = '#A0522D';
+                        doorColor = '#D2691E';
+                        glowColor = '#F4A460';
+                        handleColor = '#CD853F';
+                        break;
+                    case 2: // Volcano - obsidian door
+                        frameColor = '#1C1C1C';
+                        doorColor = '#2F1B14';
+                        glowColor = '#FF4500';
+                        handleColor = '#FF6347';
+                        break;
+                    case 3: // Ice - crystal door
+                        frameColor = '#4682B4';
+                        doorColor = '#B0E0E6';
+                        glowColor = '#87CEEB';
+                        handleColor = '#F0F8FF';
+                        break;
+                    default: // Default blue
+                        frameColor = '#2c3e50';
+                        doorColor = '#3498db';
+                        glowColor = '#3498db';
+                        handleColor = '#f39c12';
+                        break;
+                }
+                
                 // Door glow
                 const glow = Math.sin(this.glowOffset) * 0.3 + 0.7;
-                ctx.shadowColor = '#3498db';
+                ctx.shadowColor = glowColor;
                 ctx.shadowBlur = 10 * glow;
                 
                 if (!this.isOpen) {
                     // Draw closed door
-                    ctx.fillStyle = '#2c3e50';
+                    ctx.fillStyle = frameColor;
                     ctx.fillRect(this.x, this.y, this.width, this.height);
                     
-                    ctx.fillStyle = '#3498db';
+                    ctx.fillStyle = doorColor;
                     ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, this.height - 10);
                     
+                    // Add theme-specific door details
+                    if (themeIndex === 0) {
+                        // Jungle - wood planks
+                        ctx.strokeStyle = '#654321';
+                        ctx.lineWidth = 2;
+                        for (let i = 0; i < this.height - 10; i += 12) {
+                            ctx.beginPath();
+                            ctx.moveTo(this.x + 5, this.y + 5 + i);
+                            ctx.lineTo(this.x + this.width - 5, this.y + 5 + i);
+                            ctx.stroke();
+                        }
+                    } else if (themeIndex === 2) {
+                        // Volcano - lava veins
+                        ctx.fillStyle = '#FF4500';
+                        ctx.fillRect(this.x + 8, this.y + 8, 2, this.height - 16);
+                        ctx.fillRect(this.x + this.width - 10, this.y + 15, 2, this.height - 25);
+                    } else if (themeIndex === 3) {
+                        // Ice - frost patterns
+                        ctx.strokeStyle = '#F0F8FF';
+                        ctx.lineWidth = 1;
+                        for (let i = 0; i < 3; i++) {
+                            ctx.beginPath();
+                            ctx.arc(this.x + 10 + i * 5, this.y + 10 + i * 8, 3, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                    }
+                    
                     // Door handle
-                    ctx.fillStyle = '#f39c12';
+                    ctx.fillStyle = handleColor;
                     ctx.beginPath();
                     ctx.arc(this.x + this.width - 8, this.y + this.height/2, 3, 0, Math.PI * 2);
                     ctx.fill();
                 } else {
                     // Draw opened door
-                    ctx.fillStyle = '#2c3e50';
+                    ctx.fillStyle = frameColor;
                     
                     // Door frame
                     ctx.fillRect(this.x, this.y, 5, this.height); // Left frame
@@ -1628,14 +1778,14 @@
                     const openOffset = this.openProgress * 15;
                     
                     // Left door panel
-                    ctx.fillStyle = '#3498db';
+                    ctx.fillStyle = doorColor;
                     ctx.fillRect(this.x + 5 - openOffset, this.y + 5, doorPanelWidth, this.height - 10);
                     
                     // Right door panel  
                     ctx.fillRect(this.x + 5 + doorPanelWidth + openOffset, this.y + 5, doorPanelWidth, this.height - 10);
                     
                     // Door handles on opened panels
-                    ctx.fillStyle = '#f39c12';
+                    ctx.fillStyle = handleColor;
                     ctx.beginPath();
                     ctx.arc(this.x + 5 + doorPanelWidth - 3 - openOffset, this.y + this.height/2, 2, 0, Math.PI * 2);
                     ctx.fill();
@@ -1643,13 +1793,27 @@
                     ctx.arc(this.x + 5 + doorPanelWidth + 3 + openOffset, this.y + this.height/2, 2, 0, Math.PI * 2);
                     ctx.fill();
                     
-                    // Magical sparkles around the doorway
+                    // Themed magical sparkles around the doorway
                     for (let i = 0; i < 5; i++) {
                         const sparkleX = this.x + 5 + Math.random() * (this.width - 10);
                         const sparkleY = this.y + 5 + Math.random() * (this.height - 10);
                         const sparkleSize = Math.random() * 2 + 1;
                         
-                        ctx.fillStyle = `rgba(52, 152, 219, ${Math.random() * 0.8 + 0.2})`;
+                        // Extract RGB components from glowColor
+                        let r, g, b;
+                        if (glowColor === '#32CD32') { // Jungle green
+                            r = 50; g = 205; b = 50;
+                        } else if (glowColor === '#F4A460') { // Desert sandy
+                            r = 244; g = 164; b = 96;
+                        } else if (glowColor === '#FF4500') { // Volcano orange
+                            r = 255; g = 69; b = 0;
+                        } else if (glowColor === '#87CEEB') { // Ice blue
+                            r = 135; g = 206; b = 235;
+                        } else { // Default blue
+                            r = 52; g = 152; b = 219;
+                        }
+                        
+                        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${Math.random() * 0.8 + 0.2})`;
                         ctx.beginPath();
                         ctx.arc(sparkleX, sparkleY, sparkleSize, 0, Math.PI * 2);
                         ctx.fill();
@@ -1702,7 +1866,7 @@
             hazards = [];
 
             // Ground platform
-            platforms.push(new Platform(0, canvas.height - 40, canvas.width, 40));
+            platforms.push(new Platform(0, canvas.height - 40, canvas.width, 40, 'ground'));
 
             if (levelNum === 1) {
                 // Level 1 - JUNGLE with monkeys, spikes, and pits
@@ -1770,7 +1934,6 @@
                 hazards.push(new Hazard(190, 540, 60, 20, 'lava'));
                 hazards.push(new Hazard(350, 540, 70, 20, 'lava'));
                 hazards.push(new Hazard(510, 540, 80, 20, 'lava'));
-                hazards.push(new Hazard(300, 540, 30, 30, 'tnt')); // Volcanic explosion
                 
                 // Bonus boxes
                 bonusBoxes.push(new BonusBox(380, 210, 'life'));
@@ -1812,7 +1975,7 @@
                 const hazardTypes = [
                     ['spikes'],
                     ['quicksand', 'spikes'],
-                    ['lava', 'tnt'],
+                    ['lava'],
                     ['ice_spikes']
                 ];
                 
@@ -1848,8 +2011,8 @@
                 for (let i = 0; i < numHazards; i++) {
                     const x = Math.random() * (canvas.width - 100);
                     const hazardType = currentHazards[Math.floor(Math.random() * currentHazards.length)];
-                    let width = hazardType === 'tnt' ? 30 : 50 + Math.random() * 50;
-                    let height = hazardType === 'tnt' ? 30 : 20;
+                    let width = 50 + Math.random() * 50;
+                    let height = 20;
                     hazards.push(new Hazard(x, canvas.height - 40 - height, width, height, hazardType));
                 }
                 
