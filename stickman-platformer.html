@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stickman Platformer - HTML5 Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            position: relative;
+            border: 3px solid #3498db;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(52, 152, 219, 0.5);
+            background: #000;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 7px;
+        }
+
+        .ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px #000;
+            color: #ecf0f1;
+        }
+
+        .ui div {
+            margin-bottom: 5px;
+        }
+
+        .menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 15px;
+            border: 2px solid #3498db;
+            z-index: 20;
+        }
+
+        .menu h1 {
+            color: #3498db;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        .menu button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .menu button:hover {
+            transform: scale(1.05);
+        }
+
+        .upgrade-menu {
+            display: none;
+        }
+
+        .upgrade-option {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 15px;
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 18px;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn:hover {
+            background: #c0392b;
+        }
+
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 15;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(52, 152, 219, 0.8);
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        .control-btn:active {
+            background: rgba(52, 152, 219, 1);
+            transform: scale(0.95);
+        }
+
+        @media (min-width: 769px) {
+            .mobile-controls {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                border: 1px solid #3498db;
+            }
+            
+            canvas {
+                width: 100vw;
+                height: 70vh;
+                max-width: 600px;
+                max-height: 400px;
+            }
+        }
+
+        .instructions {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="ui">
+            <div>Lives: <span id="lives">3</span></div>
+            <div>Arrows: <span id="arrows">10</span></div>
+            <div>Level: <span id="level">1</span></div>
+            <div>Sword: +<span id="swordDamage">1</span></div>
+            <div>Bow: +<span id="bowDamage">1</span></div>
+            <div>Armor: +<span id="armor">0</span></div>
+        </div>
+
+        <div class="menu" id="mainMenu">
+            <h1>🏃 STICKMAN PLATFORMER</h1>
+            <p style="margin-bottom: 20px;">Navigate through dangerous levels, fight enemies, and upgrade your gear!</p>
+            <button onclick="startGame()">▶️ Start Game</button>
+            <button onclick="showInstructions()">📖 Instructions</button>
+        </div>
+
+        <div class="menu" id="instructionsMenu" style="display: none;">
+            <h2>🎮 How to Play</h2>
+            <div style="text-align: left; margin: 20px 0;">
+                <p><strong>Movement:</strong> WASD or Arrow Keys</p>
+                <p><strong>Jump:</strong> W or Up Arrow</p>
+                <p><strong>Crouch:</strong> S or Down Arrow</p>
+                <p><strong>Sword Attack:</strong> Space or Click</p>
+                <p><strong>Bow Attack:</strong> E or Right Click</p>
+                <p><strong>Goal:</strong> Reach the door to advance levels</p>
+                <p><strong>Avoid:</strong> Lava, spikes, TNT, and enemies</p>
+            </div>
+            <button onclick="hideInstructions()">Back</button>
+        </div>
+
+        <div class="menu upgrade-menu" id="upgradeMenu">
+            <h2>🔧 Choose Your Upgrade</h2>
+            <p style="margin-bottom: 20px;">Level Complete! Select one upgrade:</p>
+            <button class="upgrade-option" onclick="selectUpgrade('sword')">
+                ⚔️ Sword +1 Damage<br><small>Increase melee attack power</small>
+            </button>
+            <button class="upgrade-option" onclick="selectUpgrade('bow')">
+                🏹 Bow +1 Damage<br><small>Increase ranged attack power</small>
+            </button>
+            <button class="upgrade-option" onclick="selectUpgrade('armor')">
+                🛡️ Armor +1 Defense<br><small>Reduce incoming damage</small>
+            </button>
+        </div>
+
+        <div class="menu" id="gameOverMenu" style="display: none;">
+            <h2>💀 Game Over</h2>
+            <p style="margin-bottom: 20px;">You ran out of lives!</p>
+            <button onclick="restartGame()">🔄 Try Again</button>
+            <button onclick="goHome()">🏠 Main Menu</button>
+        </div>
+
+        <button class="back-btn" onclick="goToStore()">×</button>
+
+        <div class="mobile-controls">
+            <div class="control-group">
+                <div class="control-btn" id="leftBtn">←</div>
+                <div class="control-btn" id="rightBtn">→</div>
+                <div class="control-btn" id="jumpBtn">↑</div>
+                <div class="control-btn" id="crouchBtn">↓</div>
+            </div>
+            <div class="control-group">
+                <div class="control-btn" id="swordBtn">⚔️</div>
+                <div class="control-btn" id="bowBtn">🏹</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            Desktop: WASD/Arrows + Space/E | Mobile: Touch Controls
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Game state
+        let gameState = {
+            current: 'menu', // menu, playing, upgrade, gameOver
+            level: 1,
+            lives: 3,
+            arrows: 10,
+            swordDamage: 1,
+            bowDamage: 1,
+            armor: 0,
+            paused: false
+        };
+
+        // Input handling
+        const keys = {};
+        let touchControls = {
+            left: false,
+            right: false,
+            jump: false,
+            crouch: false,
+            sword: false,
+            bow: false
+        };
+
+        // Game objects
+        let player;
+        let platforms = [];
+        let enemies = [];
+        let projectiles = [];
+        let particles = [];
+        let bonusBoxes = [];
+        let hazards = [];
+        let door;
+
+        // Player class
+        class Player {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 20;
+                this.height = 40;
+                this.vx = 0;
+                this.vy = 0;
+                this.speed = 5;
+                this.jumpPower = 15;
+                this.onGround = false;
+                this.crouching = false;
+                this.health = gameState.lives;
+                this.facing = 1; // 1 = right, -1 = left
+                this.attackCooldown = 0;
+                this.invulnerable = 0;
+            }
+
+            update() {
+                // Handle input
+                this.crouching = keys['s'] || keys['ArrowDown'] || touchControls.crouch;
+                
+                if (!this.crouching) {
+                    if (keys['a'] || keys['ArrowLeft'] || touchControls.left) {
+                        this.vx = -this.speed;
+                        this.facing = -1;
+                    } else if (keys['d'] || keys['ArrowRight'] || touchControls.right) {
+                        this.vx = this.speed;
+                        this.facing = 1;
+                    } else {
+                        this.vx *= 0.8; // Friction
+                    }
+
+                    if ((keys['w'] || keys['ArrowUp'] || touchControls.jump) && this.onGround) {
+                        this.vy = -this.jumpPower;
+                        this.onGround = false;
+                    }
+                } else {
+                    this.vx *= 0.9; // More friction when crouching
+                }
+
+                // Attacks
+                if (keys[' '] || touchControls.sword) {
+                    this.swordAttack();
+                }
+                
+                if (keys['e'] || touchControls.bow) {
+                    this.bowAttack();
+                }
+
+                // Physics
+                this.vy += 0.8; // Gravity
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Ground collision
+                this.onGround = false;
+                for (let platform of platforms) {
+                    if (this.collidesWith(platform) && this.vy > 0) {
+                        this.y = platform.y - this.height;
+                        this.vy = 0;
+                        this.onGround = true;
+                        break;
+                    }
+                }
+
+                // Boundary checks
+                if (this.x < 0) this.x = 0;
+                if (this.x > canvas.width - this.width) this.x = canvas.width - this.width;
+                if (this.y > canvas.height) {
+                    this.takeDamage();
+                }
+
+                // Update cooldowns
+                if (this.attackCooldown > 0) this.attackCooldown--;
+                if (this.invulnerable > 0) this.invulnerable--;
+
+                // Reset touch controls
+                touchControls.sword = false;
+                touchControls.bow = false;
+            }
+
+            swordAttack() {
+                if (this.attackCooldown > 0) return;
+                
+                this.attackCooldown = 30;
+                
+                // Check for enemies in range
+                for (let enemy of enemies) {
+                    const distance = Math.abs(this.x - enemy.x);
+                    if (distance < 40 && Math.abs(this.y - enemy.y) < 50) {
+                        enemy.takeDamage(gameState.swordDamage);
+                        // Add hit effect
+                        this.createHitEffect(enemy.x, enemy.y);
+                    }
+                }
+            }
+
+            bowAttack() {
+                if (this.attackCooldown > 0 || gameState.arrows <= 0) return;
+                
+                this.attackCooldown = 20;
+                gameState.arrows--;
+                
+                // Create arrow projectile
+                projectiles.push(new Arrow(
+                    this.x + this.width/2,
+                    this.y + this.height/2,
+                    this.facing * 10,
+                    0,
+                    gameState.bowDamage
+                ));
+            }
+
+            takeDamage(amount = 1) {
+                if (this.invulnerable > 0) return;
+                
+                const actualDamage = Math.max(1, amount - gameState.armor);
+                gameState.lives -= actualDamage;
+                this.invulnerable = 60; // 1 second of invulnerability
+                
+                // Create damage effect
+                this.createDamageEffect();
+                
+                if (gameState.lives <= 0) {
+                    gameOver();
+                }
+            }
+
+            createHitEffect(x, y) {
+                for (let i = 0; i < 5; i++) {
+                    particles.push(new Particle(x, y, Math.random() * 6 - 3, Math.random() * 6 - 3, '#ff6b6b', 30));
+                }
+            }
+
+            createDamageEffect() {
+                for (let i = 0; i < 10; i++) {
+                    particles.push(new Particle(
+                        this.x + this.width/2, 
+                        this.y + this.height/2, 
+                        Math.random() * 8 - 4, 
+                        Math.random() * 8 - 4, 
+                        '#ff4757', 
+                        40
+                    ));
+                }
+            }
+
+            collidesWith(obj) {
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+
+            draw() {
+                ctx.save();
+                
+                // Flash when invulnerable
+                if (this.invulnerable > 0 && Math.floor(this.invulnerable / 5) % 2) {
+                    ctx.globalAlpha = 0.5;
+                }
+                
+                ctx.fillStyle = '#2c3e50';
+                
+                // Body
+                if (this.crouching) {
+                    ctx.fillRect(this.x + 5, this.y + 20, this.width - 10, this.height - 20);
+                } else {
+                    ctx.fillRect(this.x + 7, this.y + 10, 6, 20); // Body
+                }
+                
+                // Head
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y + 8, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (!this.crouching) {
+                    // Arms
+                    ctx.fillRect(this.x + 3, this.y + 15, 4, 10);
+                    ctx.fillRect(this.x + 13, this.y + 15, 4, 10);
+                    
+                    // Legs
+                    ctx.fillRect(this.x + 6, this.y + 30, 3, 10);
+                    ctx.fillRect(this.x + 11, this.y + 30, 3, 10);
+                }
+                
+                // Weapon indicator
+                if (this.attackCooldown > 0) {
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.fillRect(this.x + this.width/2 + this.facing * 15, this.y + 20, 3, 15);
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        // Platform class
+        class Platform {
+            constructor(x, y, width, height, type = 'normal') {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.type = type;
+                this.vx = 0;
+                this.vy = 0;
+            }
+
+            update() {
+                if (this.type === 'moving') {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    
+                    // Bounce off boundaries
+                    if (this.x <= 0 || this.x + this.width >= canvas.width) {
+                        this.vx = -this.vx;
+                    }
+                    if (this.y <= 0 || this.y + this.height >= canvas.height) {
+                        this.vy = -this.vy;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.type === 'moving' ? '#f39c12' : '#7f8c8d';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Add texture
+                ctx.strokeStyle = '#34495e';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < this.width; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x + i, this.y);
+                    ctx.lineTo(this.x + i, this.y + this.height);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Enemy class
+        class Enemy {
+            constructor(x, y, type = 'melee') {
+                this.x = x;
+                this.y = y;
+                this.width = 18;
+                this.height = 30;
+                this.type = type;
+                this.health = 2;
+                this.vx = type === 'melee' ? (Math.random() > 0.5 ? 1 : -1) : 0;
+                this.vy = 0;
+                this.shootCooldown = 0;
+                this.facing = this.vx > 0 ? 1 : -1;
+            }
+
+            update() {
+                // AI behavior
+                if (this.type === 'melee') {
+                    // Chase player
+                    if (player.x < this.x) {
+                        this.vx = -1;
+                        this.facing = -1;
+                    } else {
+                        this.vx = 1;
+                        this.facing = 1;
+                    }
+                } else if (this.type === 'ranged') {
+                    // Shoot at player
+                    this.shootCooldown--;
+                    if (this.shootCooldown <= 0 && Math.abs(player.x - this.x) < 200) {
+                        this.shoot();
+                        this.shootCooldown = 90;
+                    }
+                }
+
+                // Physics
+                this.vy += 0.8; // Gravity
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Platform collision
+                for (let platform of platforms) {
+                    if (this.collidesWith(platform) && this.vy > 0) {
+                        this.y = platform.y - this.height;
+                        this.vy = 0;
+                        break;
+                    }
+                }
+
+                // Boundary checks
+                if (this.x < 0 || this.x > canvas.width - this.width) {
+                    this.vx = -this.vx;
+                    this.facing = -this.facing;
+                }
+
+                // Check collision with player
+                if (this.collidesWith(player)) {
+                    player.takeDamage();
+                }
+            }
+
+            shoot() {
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                projectiles.push(new EnemyProjectile(
+                    this.x + this.width/2,
+                    this.y + this.height/2,
+                    Math.cos(angle) * 5,
+                    Math.sin(angle) * 5,
+                    this.type === 'magic' ? 'fireball' : 'arrow'
+                ));
+            }
+
+            takeDamage(amount) {
+                this.health -= amount;
+                if (this.health <= 0) {
+                    // Remove enemy
+                    const index = enemies.indexOf(this);
+                    if (index > -1) {
+                        enemies.splice(index, 1);
+                        // Create death effect
+                        this.createDeathEffect();
+                    }
+                }
+            }
+
+            createDeathEffect() {
+                for (let i = 0; i < 8; i++) {
+                    particles.push(new Particle(
+                        this.x + this.width/2,
+                        this.y + this.height/2,
+                        Math.random() * 8 - 4,
+                        Math.random() * 8 - 4,
+                        '#95a5a6',
+                        50
+                    ));
+                }
+            }
+
+            collidesWith(obj) {
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+
+            draw() {
+                ctx.fillStyle = this.type === 'ranged' ? '#e67e22' : this.type === 'magic' ? '#9b59b6' : '#e74c3c';
+                
+                // Body
+                ctx.fillRect(this.x + 4, this.y + 8, 10, 15);
+                
+                // Head
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y + 6, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Arms and legs
+                ctx.fillRect(this.x + 2, this.y + 12, 3, 8);
+                ctx.fillRect(this.x + 13, this.y + 12, 3, 8);
+                ctx.fillRect(this.x + 5, this.y + 23, 3, 7);
+                ctx.fillRect(this.x + 10, this.y + 23, 3, 7);
+                
+                // Weapon indicator
+                if (this.type === 'ranged') {
+                    ctx.fillStyle = '#8e44ad';
+                    ctx.fillRect(this.x + this.width/2 + this.facing * 10, this.y + 15, 2, 8);
+                }
+            }
+        }
+
+        // Arrow projectile class
+        class Arrow {
+            constructor(x, y, vx, vy, damage) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.damage = damage;
+                this.width = 8;
+                this.height = 2;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Check collision with enemies
+                for (let enemy of enemies) {
+                    if (this.collidesWith(enemy)) {
+                        enemy.takeDamage(this.damage);
+                        this.remove();
+                        break;
+                    }
+                }
+
+                // Remove if off screen
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.remove();
+                }
+            }
+
+            collidesWith(obj) {
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+
+            remove() {
+                const index = projectiles.indexOf(this);
+                if (index > -1) {
+                    projectiles.splice(index, 1);
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = '#3498db';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                // Arrow tip
+                ctx.fillStyle = '#2980b9';
+                ctx.fillRect(this.x + (this.vx > 0 ? this.width : -2), this.y, 2, this.height);
+            }
+        }
+
+        // Enemy projectile class
+        class EnemyProjectile {
+            constructor(x, y, vx, vy, type) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.type = type;
+                this.width = 6;
+                this.height = 6;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Check collision with player
+                if (this.collidesWith(player)) {
+                    player.takeDamage();
+                    this.remove();
+                }
+
+                // Remove if off screen
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.remove();
+                }
+            }
+
+            collidesWith(obj) {
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+
+            remove() {
+                const index = projectiles.indexOf(this);
+                if (index > -1) {
+                    projectiles.splice(index, 1);
+                }
+            }
+
+            draw() {
+                if (this.type === 'fireball') {
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Fire effect
+                    ctx.fillStyle = '#f39c12';
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/3, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#8e44ad';
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+            }
+        }
+
+        // Bonus box class
+        class BonusBox {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.width = 25;
+                this.height = 25;
+                this.type = type; // 'life', 'arrows', 'speed'
+                this.collected = false;
+                this.bobOffset = Math.random() * Math.PI * 2;
+            }
+
+            update() {
+                // Bobbing animation
+                this.bobOffset += 0.1;
+                
+                // Check collision with player
+                if (!this.collected && this.collidesWith(player)) {
+                    this.collect();
+                }
+            }
+
+            collect() {
+                this.collected = true;
+                
+                switch (this.type) {
+                    case 'life':
+                        gameState.lives++;
+                        break;
+                    case 'arrows':
+                        gameState.arrows += 10;
+                        break;
+                    case 'speed':
+                        // Temporary speed boost (would need implementation)
+                        break;
+                }
+                
+                // Create collection effect
+                this.createCollectionEffect();
+                
+                // Remove from array
+                const index = bonusBoxes.indexOf(this);
+                if (index > -1) {
+                    bonusBoxes.splice(index, 1);
+                }
+            }
+
+            createCollectionEffect() {
+                const color = this.type === 'life' ? '#e74c3c' : this.type === 'arrows' ? '#3498db' : '#f39c12';
+                for (let i = 0; i < 6; i++) {
+                    particles.push(new Particle(
+                        this.x + this.width/2,
+                        this.y + this.height/2,
+                        Math.random() * 6 - 3,
+                        Math.random() * 6 - 3,
+                        color,
+                        40
+                    ));
+                }
+            }
+
+            collidesWith(obj) {
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+
+            draw() {
+                if (this.collected) return;
+                
+                const bobY = this.y + Math.sin(this.bobOffset) * 3;
+                
+                let color;
+                let symbol;
+                switch (this.type) {
+                    case 'life':
+                        color = '#e74c3c';
+                        symbol = '♥';
+                        break;
+                    case 'arrows':
+                        color = '#3498db';
+                        symbol = '➤';
+                        break;
+                    case 'speed':
+                        color = '#f39c12';
+                        symbol = '⚡';
+                        break;
+                }
+                
+                ctx.fillStyle = color;
+                ctx.fillRect(this.x, bobY, this.width, this.height);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(symbol, this.x + this.width/2, bobY + this.height/2 + 5);
+            }
+        }
+
+        // Hazard class (lava, spikes, TNT)
+        class Hazard {
+            constructor(x, y, width, height, type) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.type = type; // 'lava', 'spikes', 'tnt'
+                this.triggered = false;
+            }
+
+            update() {
+                if (this.collidesWith(player)) {
+                    if (this.type === 'lava') {
+                        player.takeDamage(3); // Instant death
+                    } else if (this.type === 'spikes') {
+                        player.takeDamage(2);
+                    } else if (this.type === 'tnt' && !this.triggered) {
+                        this.explode();
+                    }
+                }
+            }
+
+            explode() {
+                this.triggered = true;
+                
+                // Damage player if in range
+                const distance = Math.sqrt(
+                    Math.pow(player.x + player.width/2 - (this.x + this.width/2), 2) +
+                    Math.pow(player.y + player.height/2 - (this.y + this.height/2), 2)
+                );
+                
+                if (distance < 80) {
+                    player.takeDamage(2);
+                }
+                
+                // Create explosion effect
+                for (let i = 0; i < 20; i++) {
+                    particles.push(new Particle(
+                        this.x + this.width/2,
+                        this.y + this.height/2,
+                        Math.random() * 12 - 6,
+                        Math.random() * 12 - 6,
+                        Math.random() > 0.5 ? '#e74c3c' : '#f39c12',
+                        60
+                    ));
+                }
+                
+                // Remove TNT
+                setTimeout(() => {
+                    const index = hazards.indexOf(this);
+                    if (index > -1) {
+                        hazards.splice(index, 1);
+                    }
+                }, 100);
+            }
+
+            collidesWith(obj) {
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+
+            draw() {
+                switch (this.type) {
+                    case 'lava':
+                        ctx.fillStyle = '#e74c3c';
+                        ctx.fillRect(this.x, this.y, this.width, this.height);
+                        // Lava bubbles
+                        ctx.fillStyle = '#c0392b';
+                        for (let i = 0; i < this.width; i += 15) {
+                            ctx.beginPath();
+                            ctx.arc(this.x + i + Math.sin(Date.now() * 0.01 + i) * 2, this.y + 5, 3, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        break;
+                    case 'spikes':
+                        ctx.fillStyle = '#7f8c8d';
+                        ctx.fillRect(this.x, this.y + this.height - 5, this.width, 5);
+                        // Spike triangles
+                        ctx.fillStyle = '#34495e';
+                        for (let i = 0; i < this.width; i += 10) {
+                            ctx.beginPath();
+                            ctx.moveTo(this.x + i, this.y + this.height - 5);
+                            ctx.lineTo(this.x + i + 5, this.y);
+                            ctx.lineTo(this.x + i + 10, this.y + this.height - 5);
+                            ctx.fill();
+                        }
+                        break;
+                    case 'tnt':
+                        if (!this.triggered) {
+                            ctx.fillStyle = '#8e44ad';
+                            ctx.fillRect(this.x, this.y, this.width, this.height);
+                            ctx.fillStyle = 'white';
+                            ctx.font = '12px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('TNT', this.x + this.width/2, this.y + this.height/2 + 4);
+                        }
+                        break;
+                }
+            }
+        }
+
+        // Door class
+        class Door {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 30;
+                this.height = 50;
+                this.glowOffset = 0;
+            }
+
+            update() {
+                this.glowOffset += 0.1;
+                
+                // Check collision with player
+                if (this.collidesWith(player)) {
+                    levelComplete();
+                }
+            }
+
+            collidesWith(obj) {
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+
+            draw() {
+                // Door glow
+                const glow = Math.sin(this.glowOffset) * 0.3 + 0.7;
+                ctx.shadowColor = '#3498db';
+                ctx.shadowBlur = 10 * glow;
+                
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                
+                ctx.fillStyle = '#3498db';
+                ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, this.height - 10);
+                
+                // Door handle
+                ctx.fillStyle = '#f39c12';
+                ctx.beginPath();
+                ctx.arc(this.x + this.width - 8, this.y + this.height/2, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Particle class for effects
+        class Particle {
+            constructor(x, y, vx, vy, color, life) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.color = color;
+                this.life = life;
+                this.maxLife = life;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.2; // Gravity
+                this.life--;
+            }
+
+            draw() {
+                const alpha = this.life / this.maxLife;
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, 3, 3);
+                ctx.globalAlpha = 1;
+            }
+
+            isDead() {
+                return this.life <= 0;
+            }
+        }
+
+        // Level generation
+        function generateLevel(levelNum) {
+            platforms = [];
+            enemies = [];
+            projectiles = [];
+            particles = [];
+            bonusBoxes = [];
+            hazards = [];
+
+            // Ground platform
+            platforms.push(new Platform(0, canvas.height - 40, canvas.width, 40));
+
+            if (levelNum === 1) {
+                // Level 1 - Tutorial
+                platforms.push(new Platform(200, 450, 150, 20));
+                platforms.push(new Platform(400, 350, 150, 20));
+                platforms.push(new Platform(600, 250, 150, 20));
+                
+                enemies.push(new Enemy(250, 400, 'melee'));
+                bonusBoxes.push(new BonusBox(450, 320, 'arrows'));
+                hazards.push(new Hazard(350, 540, 50, 20, 'spikes'));
+                
+                door = new Door(650, 200);
+                
+            } else if (levelNum === 2) {
+                // Level 2 - More enemies
+                platforms.push(new Platform(100, 400, 100, 20));
+                platforms.push(new Platform(300, 300, 100, 20));
+                platforms.push(new Platform(500, 200, 100, 20));
+                platforms.push(new Platform(650, 300, 100, 20));
+                
+                enemies.push(new Enemy(150, 350, 'melee'));
+                enemies.push(new Enemy(350, 250, 'ranged'));
+                enemies.push(new Enemy(550, 150, 'melee'));
+                
+                bonusBoxes.push(new BonusBox(350, 270, 'life'));
+                bonusBoxes.push(new BonusBox(550, 170, 'arrows'));
+                
+                hazards.push(new Hazard(200, 540, 100, 20, 'lava'));
+                hazards.push(new Hazard(400, 540, 30, 30, 'tnt'));
+                
+                door = new Door(700, 250);
+                
+            } else {
+                // Progressive levels
+                const numPlatforms = Math.min(8, 4 + levelNum);
+                const numEnemies = Math.min(6, 2 + levelNum);
+                
+                for (let i = 0; i < numPlatforms; i++) {
+                    const x = Math.random() * (canvas.width - 100);
+                    const y = 200 + Math.random() * 300;
+                    platforms.push(new Platform(x, y, 80 + Math.random() * 100, 20));
+                }
+                
+                for (let i = 0; i < numEnemies; i++) {
+                    const x = Math.random() * (canvas.width - 50);
+                    const y = 100;
+                    const type = Math.random() > 0.5 ? 'melee' : Math.random() > 0.5 ? 'ranged' : 'magic';
+                    enemies.push(new Enemy(x, y, type));
+                }
+                
+                // Add random bonus boxes
+                for (let i = 0; i < 3; i++) {
+                    const x = Math.random() * (canvas.width - 50);
+                    const y = Math.random() * 300 + 100;
+                    const type = Math.random() > 0.6 ? 'life' : 'arrows';
+                    bonusBoxes.push(new BonusBox(x, y, type));
+                }
+                
+                // Add hazards
+                const numHazards = Math.min(5, levelNum);
+                for (let i = 0; i < numHazards; i++) {
+                    const x = Math.random() * (canvas.width - 100);
+                    const hazardType = Math.random() > 0.6 ? 'lava' : Math.random() > 0.5 ? 'spikes' : 'tnt';
+                    let width = hazardType === 'tnt' ? 30 : 50 + Math.random() * 50;
+                    let height = hazardType === 'tnt' ? 30 : hazardType === 'spikes' ? 20 : 20;
+                    hazards.push(new Hazard(x, canvas.height - 40 - height, width, height, hazardType));
+                }
+                
+                door = new Door(canvas.width - 50, canvas.height - 90);
+            }
+
+            // Reset player position
+            player = new Player(50, canvas.height - 100);
+        }
+
+        // Game functions
+        function startGame() {
+            gameState.current = 'playing';
+            gameState.level = 1;
+            gameState.lives = 3;
+            gameState.arrows = 10;
+            gameState.swordDamage = 1;
+            gameState.bowDamage = 1;
+            gameState.armor = 0;
+            
+            generateLevel(1);
+            hideAllMenus();
+            updateUI();
+            gameLoop();
+        }
+
+        function levelComplete() {
+            gameState.current = 'upgrade';
+            document.getElementById('upgradeMenu').style.display = 'block';
+        }
+
+        function selectUpgrade(type) {
+            switch (type) {
+                case 'sword':
+                    gameState.swordDamage++;
+                    break;
+                case 'bow':
+                    gameState.bowDamage++;
+                    break;
+                case 'armor':
+                    gameState.armor++;
+                    break;
+            }
+            
+            gameState.level++;
+            generateLevel(gameState.level);
+            gameState.current = 'playing';
+            hideAllMenus();
+            updateUI();
+        }
+
+        function gameOver() {
+            gameState.current = 'gameOver';
+            document.getElementById('gameOverMenu').style.display = 'block';
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function goHome() {
+            gameState.current = 'menu';
+            hideAllMenus();
+            document.getElementById('mainMenu').style.display = 'block';
+        }
+
+        function goToStore() {
+            window.location.href = 'index.html';
+        }
+
+        function showInstructions() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('instructionsMenu').style.display = 'block';
+        }
+
+        function hideInstructions() {
+            document.getElementById('instructionsMenu').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'block';
+        }
+
+        function hideAllMenus() {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('instructionsMenu').style.display = 'none';
+            document.getElementById('upgradeMenu').style.display = 'none';
+            document.getElementById('gameOverMenu').style.display = 'none';
+        }
+
+        function updateUI() {
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('arrows').textContent = gameState.arrows;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('swordDamage').textContent = gameState.swordDamage;
+            document.getElementById('bowDamage').textContent = gameState.bowDamage;
+            document.getElementById('armor').textContent = gameState.armor;
+        }
+
+        // Input handling
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            if (e.key === 'Escape' && gameState.current === 'playing') {
+                gameState.paused = !gameState.paused;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // Mobile controls
+        function setupMobileControls() {
+            const controls = {
+                leftBtn: 'left',
+                rightBtn: 'right',
+                jumpBtn: 'jump',
+                crouchBtn: 'crouch',
+                swordBtn: 'sword',
+                bowBtn: 'bow'
+            };
+
+            Object.keys(controls).forEach(btnId => {
+                const btn = document.getElementById(btnId);
+                const action = controls[btnId];
+                
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    touchControls[action] = true;
+                });
+                
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    touchControls[action] = false;
+                });
+            });
+        }
+
+        // Game loop
+        function gameLoop() {
+            if (gameState.current !== 'playing' || gameState.paused) {
+                if (gameState.current === 'playing') {
+                    requestAnimationFrame(gameLoop);
+                }
+                return;
+            }
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#3498db');
+            gradient.addColorStop(1, '#2c3e50');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw game objects
+            if (player) {
+                player.update();
+                player.draw();
+            }
+
+            platforms.forEach(platform => {
+                platform.update();
+                platform.draw();
+            });
+
+            enemies.forEach(enemy => {
+                enemy.update();
+                enemy.draw();
+            });
+
+            projectiles.forEach(projectile => {
+                projectile.update();
+                projectile.draw();
+            });
+
+            bonusBoxes.forEach(box => {
+                box.update();
+                box.draw();
+            });
+
+            hazards.forEach(hazard => {
+                hazard.update();
+                hazard.draw();
+            });
+
+            if (door) {
+                door.update();
+                door.draw();
+            }
+
+            // Update and draw particles
+            particles = particles.filter(particle => {
+                particle.update();
+                particle.draw();
+                return !particle.isDead();
+            });
+
+            updateUI();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize
+        setupMobileControls();
+        updateUI();
+    </script>
+</body>
+</html> 

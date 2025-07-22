@@ -454,6 +454,14 @@
                 description: "Build and manage your own civilization from the ground up.",
                 thumbnail: "🏛️",
                 fullDescription: "Start with a small settlement and grow it into a mighty empire. Manage resources, research technologies, build armies, and engage in diplomacy with other civilizations. Features multiple victory conditions and replay value."
+            },
+            {
+                id: 13,
+                title: "Stickman Platformer",
+                category: "arcade",
+                description: "Navigate through dangerous levels as a stickman warrior with sword and bow combat.",
+                thumbnail: "🏃",
+                fullDescription: "Guide your stickman hero through challenging platformer levels filled with enemies, hazards, and obstacles. Use your sword for melee combat and bow for ranged attacks. Collect power-ups, avoid lava and spikes, defeat enemies, and upgrade your gear between levels. Features progressive difficulty, multiple enemy types, and an upgrade system for weapons and armor."
             }
         ];
 
@@ -574,8 +582,14 @@
                 return;
             }
             
+            if (game.title === "Stickman Platformer") {
+                // Open the actual stickman platformer game
+                window.location.href = 'stickman-platformer.html';
+                return;
+            }
+            
             // For other games, show placeholder message
-            alert(`🎮 Starting "${game.title}"!\n\nThis is a demo storefront. In a real implementation, this would:\n• Open the game in a new window/tab\n• Load the game files\n• Initialize the game engine\n• Track play statistics\n\nSpace Shooter is available as a playable demo!`);
+            alert(`🎮 Starting "${game.title}"!\n\nThis is a demo storefront. In a real implementation, this would:\n• Open the game in a new window/tab\n• Load the game files\n• Initialize the game engine\n• Track play statistics\n\nSpace Shooter and Stickman Platformer are available as playable demos!`);
             closeGameModal();
         }
 
