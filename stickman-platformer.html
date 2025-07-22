@@ -138,7 +138,7 @@
         .back-btn {
             position: absolute;
             top: 10px;
-            right: 10px;
+            right: 50px;
             background: #e74c3c;
             color: white;
             border: none;
@@ -151,25 +151,66 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 25;
         }
 
         .back-btn:hover {
             background: #c0392b;
         }
 
-        .mobile-controls {
+        .fullscreen-btn {
             position: absolute;
-            bottom: 20px;
-            width: 100%;
+            top: 10px;
+            right: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 18px;
+            width: 35px;
+            height: 35px;
             display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 15;
+            align-items: center;
+            justify-content: center;
+            z-index: 25;
+        }
+
+        .fullscreen-btn:hover {
+            background: #2980b9;
+        }
+
+        .mobile-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            display: none;
+            z-index: 20;
+            pointer-events: none;
         }
 
         .control-group {
+            position: absolute;
+            pointer-events: auto;
+        }
+
+        .control-group.movement {
+            bottom: 20px;
+            left: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+        }
+
+        .control-group.attack {
+            bottom: 20px;
+            right: 20px;
             display: flex;
-            gap: 10px;
+            gap: 15px;
         }
 
         .control-btn {
@@ -185,16 +226,88 @@
             justify-content: center;
             user-select: none;
             touch-action: manipulation;
+            transition: all 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         .control-btn:active {
             background: rgba(52, 152, 219, 1);
             transform: scale(0.95);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn.empty {
+            background: none;
+            border: none;
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        /* Enhanced visibility in fullscreen */
+        .game-container.fullscreen .control-btn {
+            background: rgba(52, 152, 219, 0.9);
+            border: 3px solid #3498db;
+            font-size: 20px;
+            width: 60px;
+            height: 60px;
+        }
+
+        .game-container.fullscreen .control-group.movement {
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(3, 60px);
+            gap: 8px;
+        }
+
+        /* Fullscreen styles */
+        .game-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10;
+            border: none;
+            border-radius: 0;
+            background: #000;
+        }
+
+        .game-container.fullscreen canvas {
+            width: 100vw;
+            height: calc(100vh - 140px); /* Account for mobile controls */
+            object-fit: contain;
+            background: #000;
+            margin: 0;
+            padding: 0;
+        }
+
+        @media (min-width: 769px) {
+            .game-container.fullscreen canvas {
+                height: 100vh; /* Full height on desktop */
+            }
+        }
+
+        .game-container.fullscreen .mobile-controls {
+            display: block;
+        }
+
+        /* Force landscape on mobile in fullscreen */
+        @media screen and (max-width: 768px) and (orientation: portrait) {
+            .game-container.fullscreen {
+                transform: rotate(90deg);
+                transform-origin: center;
+                width: 100vh;
+                height: 100vw;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                margin-top: -50vw;
+                margin-left: -50vh;
+            }
         }
 
         @media (min-width: 769px) {
             .mobile-controls {
-                display: none;
+                display: none !important;
             }
         }
 
@@ -215,6 +328,10 @@
                 font-size: 16px;
                 padding: 6px 15px;
                 min-width: 100px;
+            }
+
+            .mobile-controls {
+                display: block;
             }
         }
 
@@ -286,15 +403,21 @@
         </div>
 
         <button class="back-btn" onclick="goToStore()">×</button>
+        <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
 
         <div class="mobile-controls">
-            <div class="control-group">
-                <div class="control-btn" id="leftBtn">←</div>
-                <div class="control-btn" id="rightBtn">→</div>
+            <div class="control-group movement">
+                <div class="control-btn empty"></div>
                 <div class="control-btn" id="jumpBtn">↑</div>
+                <div class="control-btn empty"></div>
+                <div class="control-btn" id="leftBtn">←</div>
+                <div class="control-btn empty"></div>
+                <div class="control-btn" id="rightBtn">→</div>
+                <div class="control-btn empty"></div>
                 <div class="control-btn" id="crouchBtn">↓</div>
+                <div class="control-btn empty"></div>
             </div>
-            <div class="control-group">
+            <div class="control-group attack">
                 <div class="control-btn" id="swordBtn">⚔️</div>
                 <div class="control-btn" id="bowBtn">🏹</div>
             </div>
@@ -2095,6 +2218,114 @@
             window.location.href = 'index.html';
         }
 
+        function toggleFullscreen() {
+            const gameContainer = document.querySelector('.game-container');
+            
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                gameContainer.classList.add('fullscreen');
+                
+                if (gameContainer.requestFullscreen) {
+                    gameContainer.requestFullscreen();
+                } else if (gameContainer.webkitRequestFullscreen) {
+                    gameContainer.webkitRequestFullscreen();
+                } else if (gameContainer.msRequestFullscreen) {
+                    gameContainer.msRequestFullscreen();
+                } else {
+                    // Fallback for browsers that don't support fullscreen API
+                    handleFullscreenFallback();
+                }
+                
+                // Lock orientation to landscape on mobile
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {
+                        // Orientation lock failed, continue anyway
+                    });
+                }
+                
+                // Resize canvas for fullscreen
+                resizeCanvasForFullscreen();
+            } else {
+                // Exit fullscreen
+                exitFullscreen();
+            }
+        }
+
+        function exitFullscreen() {
+            const gameContainer = document.querySelector('.game-container');
+            gameContainer.classList.remove('fullscreen');
+            
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+            
+            // Unlock orientation
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+            
+            // Reset canvas size
+            resetCanvasSize();
+        }
+
+        function handleFullscreenFallback() {
+            // CSS-only fullscreen for browsers without fullscreen API
+            const gameContainer = document.querySelector('.game-container');
+            gameContainer.style.position = 'fixed';
+            gameContainer.style.top = '0';
+            gameContainer.style.left = '0';
+            gameContainer.style.width = '100vw';
+            gameContainer.style.height = '100vh';
+            gameContainer.style.zIndex = '9999';
+        }
+
+        function resizeCanvasForFullscreen() {
+            const canvas = document.getElementById('gameCanvas');
+            const isMobile = window.innerWidth <= 768;
+            
+            canvas.style.width = '100vw';
+            canvas.style.height = isMobile ? 'calc(100vh - 140px)' : '100vh';
+            canvas.style.objectFit = 'contain';
+            canvas.style.margin = '0';
+            canvas.style.padding = '0';
+        }
+
+        function resetCanvasSize() {
+            const canvas = document.getElementById('gameCanvas');
+            canvas.style.width = '';
+            canvas.style.height = '';
+            canvas.style.objectFit = '';
+        }
+
+        // Handle fullscreen change events
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+        function handleFullscreenChange() {
+            const gameContainer = document.querySelector('.game-container');
+            if (!document.fullscreenElement) {
+                gameContainer.classList.remove('fullscreen');
+                resetCanvasSize();
+                
+                // Unlock orientation when exiting fullscreen
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            }
+        }
+
+        // Handle escape key to exit fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.querySelector('.game-container').classList.contains('fullscreen')) {
+                exitFullscreen();
+            }
+        });
+
         function showInstructions() {
             document.getElementById('mainMenu').style.display = 'none';
             document.getElementById('instructionsMenu').style.display = 'block';
@@ -2266,19 +2497,44 @@
 
             Object.keys(controls).forEach(btnId => {
                 const btn = document.getElementById(btnId);
+                if (!btn) return; // Skip if button doesn't exist
+                
                 const action = controls[btnId];
                 
                 btn.addEventListener('touchstart', (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     touchControls[action] = true;
                 });
                 
                 btn.addEventListener('touchend', (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
+                    touchControls[action] = false;
+                });
+                
+                // Prevent context menu on long press
+                btn.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+                
+                // Handle touch cancel (when finger leaves button area)
+                btn.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
                     touchControls[action] = false;
                 });
             });
         }
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                // Adjust canvas if in fullscreen
+                if (document.querySelector('.game-container').classList.contains('fullscreen')) {
+                    resizeCanvasForFullscreen();
+                }
+            }, 500);
+        });
 
         // Game loop
         function gameLoop() {
@@ -2349,6 +2605,23 @@
         // Initialize
         setupMobileControls();
         updateUI();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (document.querySelector('.game-container').classList.contains('fullscreen')) {
+                resizeCanvasForFullscreen();
+            }
+        });
+
+        // Prevent zoom on double tap for mobile controls
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
     </script>
 </body>
 </html> 
