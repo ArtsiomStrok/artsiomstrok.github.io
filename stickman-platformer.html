@@ -321,6 +321,8 @@
             paused: false
         };
 
+        let gameLoopRunning = false;
+
         // Input handling
         const keys = {};
         let touchControls = {
@@ -835,17 +837,19 @@
 
         // Enemy class
         class Enemy {
-            constructor(x, y, type = 'melee') {
+            constructor(x, y, type = 'melee', variant = 'basic') {
                 this.x = x;
                 this.y = y;
                 this.width = 18;
                 this.height = 30;
                 this.type = type;
-                this.health = 2;
+                this.variant = variant; // monkey, scorpion, lava_golem, snowman
+                this.health = variant === 'lava_golem' ? 4 : 2;
                 this.vx = type === 'melee' ? (Math.random() > 0.5 ? 1 : -1) : 0;
                 this.vy = 0;
                 this.shootCooldown = 0;
                 this.facing = this.vx > 0 ? 1 : -1;
+                this.animOffset = Math.random() * Math.PI * 2;
             }
 
             update() {
@@ -939,6 +943,166 @@
             }
 
             draw() {
+                ctx.save();
+                this.animOffset += 0.1;
+                
+                switch (this.variant) {
+                    case 'monkey':
+                        this.drawMonkey();
+                        break;
+                    case 'scorpion':
+                        this.drawScorpion();
+                        break;
+                    case 'lava_golem':
+                        this.drawLavaGolem();
+                        break;
+                    case 'snowman':
+                        this.drawSnowman();
+                        break;
+                    default:
+                        this.drawBasic();
+                        break;
+                }
+                
+                ctx.restore();
+            }
+
+            drawMonkey() {
+                // Brown monkey
+                ctx.fillStyle = '#8B4513';
+                
+                // Body (swaying animation)
+                const sway = Math.sin(this.animOffset) * 2;
+                ctx.fillRect(this.x + 4 + sway, this.y + 8, 10, 15);
+                
+                // Head
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2 + sway, this.y + 6, 7, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Arms (longer for monkey)
+                ctx.fillRect(this.x + 1 + sway, this.y + 10, 4, 12);
+                ctx.fillRect(this.x + 13 + sway, this.y + 10, 4, 12);
+                
+                // Legs
+                ctx.fillRect(this.x + 5 + sway, this.y + 23, 3, 7);
+                ctx.fillRect(this.x + 10 + sway, this.y + 23, 3, 7);
+                
+                // Tail
+                ctx.fillStyle = '#654321';
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2 + sway - 8, this.y + 15, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Eyes
+                ctx.fillStyle = '#000';
+                ctx.fillRect(this.x + 7 + sway, this.y + 4, 2, 2);
+                ctx.fillRect(this.x + 9 + sway, this.y + 4, 2, 2);
+            }
+
+            drawScorpion() {
+                // Sandy scorpion
+                ctx.fillStyle = '#D2691E';
+                
+                // Body (low to ground)
+                ctx.fillRect(this.x + 3, this.y + 18, 12, 8);
+                
+                // Head/claws
+                ctx.fillRect(this.x + 1, this.y + 16, 4, 6);
+                ctx.fillRect(this.x + 13, this.y + 16, 4, 6);
+                
+                // Legs (multiple)
+                for (let i = 0; i < 3; i++) {
+                    ctx.fillRect(this.x + 4 + i * 3, this.y + 26, 2, 4);
+                    ctx.fillRect(this.x + 5 + i * 3, this.y + 26, 2, 4);
+                }
+                
+                // Tail/stinger
+                ctx.fillStyle = '#8B4513';
+                const tailSway = Math.sin(this.animOffset * 2) * 3;
+                ctx.fillRect(this.x + 15, this.y + 10 + tailSway, 3, 8);
+                
+                // Stinger tip
+                ctx.fillStyle = '#000';
+                ctx.fillRect(this.x + 16, this.y + 8 + tailSway, 1, 3);
+            }
+
+            drawLavaGolem() {
+                // Dark rocky golem with lava cracks
+                ctx.fillStyle = '#2C1810';
+                
+                // Large body
+                ctx.fillRect(this.x + 2, this.y + 5, 14, 20);
+                
+                // Head
+                ctx.fillRect(this.x + 4, this.y, 10, 10);
+                
+                // Arms (thick)
+                ctx.fillRect(this.x - 1, this.y + 8, 5, 12);
+                ctx.fillRect(this.x + 14, this.y + 8, 5, 12);
+                
+                // Legs (thick)
+                ctx.fillRect(this.x + 3, this.y + 25, 5, 8);
+                ctx.fillRect(this.x + 10, this.y + 25, 5, 8);
+                
+                // Lava cracks (glowing)
+                const glow = Math.sin(this.animOffset * 3) * 0.3 + 0.7;
+                ctx.fillStyle = `rgba(255, 69, 0, ${glow})`;
+                ctx.fillRect(this.x + 6, this.y + 8, 2, 8);
+                ctx.fillRect(this.x + 10, this.y + 12, 2, 6);
+                ctx.fillRect(this.x + 7, this.y + 2, 4, 2);
+                
+                // Glowing eyes
+                ctx.fillStyle = '#FF4500';
+                ctx.fillRect(this.x + 6, this.y + 3, 2, 2);
+                ctx.fillRect(this.x + 10, this.y + 3, 2, 2);
+            }
+
+            drawSnowman() {
+                // White snowman
+                ctx.fillStyle = '#F0F8FF';
+                
+                // Bottom snowball
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y + 22, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Middle snowball
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y + 12, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Head snowball
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y + 5, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Hat
+                ctx.fillStyle = '#000';
+                ctx.fillRect(this.x + 6, this.y - 2, 6, 4);
+                ctx.fillRect(this.x + 5, this.y + 1, 8, 2);
+                
+                // Eyes (coal)
+                ctx.fillRect(this.x + 7, this.y + 4, 1, 1);
+                ctx.fillRect(this.x + 10, this.y + 4, 1, 1);
+                
+                // Carrot nose
+                ctx.fillStyle = '#FF6347';
+                ctx.fillRect(this.x + 8, this.y + 6, 2, 1);
+                
+                // Stick arms
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(this.x + 2, this.y + 11, 4, 1);
+                ctx.fillRect(this.x + 12, this.y + 11, 4, 1);
+                
+                // Buttons
+                ctx.fillStyle = '#000';
+                ctx.fillRect(this.x + 8, this.y + 10, 1, 1);
+                ctx.fillRect(this.x + 8, this.y + 13, 1, 1);
+                ctx.fillRect(this.x + 8, this.y + 16, 1, 1);
+            }
+
+            drawBasic() {
                 ctx.fillStyle = this.type === 'ranged' ? '#e67e22' : this.type === 'magic' ? '#9b59b6' : '#e74c3c';
                 
                 // Body
@@ -1194,7 +1358,9 @@
                 if (this.collidesWith(player)) {
                     if (this.type === 'lava') {
                         player.takeDamage(3); // Instant death
-                    } else if (this.type === 'spikes') {
+                    } else if (this.type === 'quicksand') {
+                        player.takeDamage(3); // Sinks in quicksand
+                    } else if (this.type === 'spikes' || this.type === 'ice_spikes') {
                         player.takeDamage(2);
                     } else if (this.type === 'tnt' && !this.triggered) {
                         this.explode();
@@ -1267,6 +1433,37 @@
                             ctx.lineTo(this.x + i + 5, this.y);
                             ctx.lineTo(this.x + i + 10, this.y + this.height - 5);
                             ctx.fill();
+                        }
+                        break;
+                    case 'quicksand':
+                        // Sandy quicksand (acts like lava but desert themed)
+                        ctx.fillStyle = '#D2B48C';
+                        ctx.fillRect(this.x, this.y, this.width, this.height);
+                        // Quicksand ripples
+                        ctx.fillStyle = '#CD853F';
+                        for (let i = 0; i < this.width; i += 12) {
+                            ctx.beginPath();
+                            ctx.arc(this.x + i + Math.sin(Date.now() * 0.008 + i) * 1.5, this.y + 8, 2, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        break;
+                    case 'ice_spikes':
+                        // Icy ground with ice spikes
+                        ctx.fillStyle = '#E0F6FF';
+                        ctx.fillRect(this.x, this.y + this.height - 5, this.width, 5);
+                        // Ice spike triangles
+                        ctx.fillStyle = '#B0E0E6';
+                        for (let i = 0; i < this.width; i += 8) {
+                            ctx.beginPath();
+                            ctx.moveTo(this.x + i, this.y + this.height - 5);
+                            ctx.lineTo(this.x + i + 4, this.y);
+                            ctx.lineTo(this.x + i + 8, this.y + this.height - 5);
+                            ctx.fill();
+                            
+                            // Ice shine effect
+                            ctx.fillStyle = '#F0F8FF';
+                            ctx.fillRect(this.x + i + 1, this.y + 2, 1, this.height - 7);
+                            ctx.fillStyle = '#B0E0E6';
                         }
                         break;
                     case 'tnt':
@@ -1495,7 +1692,7 @@
             }
         }
 
-        // Level generation
+        // Level generation with themes
         function generateLevel(levelNum) {
             platforms = [];
             enemies = [];
@@ -1508,38 +1705,120 @@
             platforms.push(new Platform(0, canvas.height - 40, canvas.width, 40));
 
             if (levelNum === 1) {
-                // Level 1 - Tutorial
-                platforms.push(new Platform(200, 450, 150, 20));
-                platforms.push(new Platform(400, 350, 150, 20));
-                platforms.push(new Platform(600, 250, 150, 20));
+                // Level 1 - JUNGLE with monkeys, spikes, and pits
+                platforms.push(new Platform(150, 450, 120, 20));
+                platforms.push(new Platform(350, 380, 100, 20));
+                platforms.push(new Platform(520, 320, 130, 20));
+                platforms.push(new Platform(200, 250, 100, 20));
+                platforms.push(new Platform(450, 180, 120, 20));
                 
-                enemies.push(new Enemy(250, 400, 'melee'));
-                bonusBoxes.push(new BonusBox(450, 320, 'arrows'));
-                hazards.push(new Hazard(350, 540, 50, 20, 'spikes'));
+                // Monkey enemies
+                enemies.push(new Enemy(180, 400, 'melee', 'monkey'));
+                enemies.push(new Enemy(380, 330, 'melee', 'monkey'));
+                enemies.push(new Enemy(480, 130, 'ranged', 'monkey'));
                 
-                door = new Door(650, 200);
+                // Jungle hazards - spikes in pits
+                hazards.push(new Hazard(270, 540, 80, 20, 'spikes'));
+                hazards.push(new Hazard(420, 540, 60, 20, 'spikes'));
+                hazards.push(new Hazard(600, 540, 70, 20, 'spikes'));
+                
+                // Bonus boxes
+                bonusBoxes.push(new BonusBox(380, 350, 'arrows'));
+                bonusBoxes.push(new BonusBox(230, 220, 'life'));
+                
+                door = new Door(500, 130);
                 
             } else if (levelNum === 2) {
-                // Level 2 - More enemies
-                platforms.push(new Platform(100, 400, 100, 20));
-                platforms.push(new Platform(300, 300, 100, 20));
-                platforms.push(new Platform(500, 200, 100, 20));
-                platforms.push(new Platform(650, 300, 100, 20));
+                // Level 2 - DESERT with scorpions, quicksand, and snakes
+                platforms.push(new Platform(120, 420, 100, 20));
+                platforms.push(new Platform(300, 350, 120, 20));
+                platforms.push(new Platform(180, 280, 90, 20));
+                platforms.push(new Platform(400, 200, 110, 20));
+                platforms.push(new Platform(600, 320, 100, 20));
                 
-                enemies.push(new Enemy(150, 350, 'melee'));
-                enemies.push(new Enemy(350, 250, 'ranged'));
-                enemies.push(new Enemy(550, 150, 'melee'));
+                // Scorpion enemies
+                enemies.push(new Enemy(150, 370, 'melee', 'scorpion'));
+                enemies.push(new Enemy(330, 300, 'melee', 'scorpion'));
+                enemies.push(new Enemy(430, 150, 'ranged', 'scorpion'));
+                enemies.push(new Enemy(630, 270, 'melee', 'scorpion'));
                 
-                bonusBoxes.push(new BonusBox(350, 270, 'life'));
-                bonusBoxes.push(new BonusBox(550, 170, 'arrows'));
+                // Desert hazards - quicksand (acts like lava but looks sandy)
+                hazards.push(new Hazard(250, 540, 80, 20, 'quicksand'));
+                hazards.push(new Hazard(480, 540, 90, 20, 'quicksand'));
+                hazards.push(new Hazard(100, 540, 60, 20, 'spikes')); // Cactus spines
                 
-                hazards.push(new Hazard(200, 540, 100, 20, 'lava'));
-                hazards.push(new Hazard(400, 540, 30, 30, 'tnt'));
+                // Bonus boxes
+                bonusBoxes.push(new BonusBox(210, 250, 'arrows'));
+                bonusBoxes.push(new BonusBox(630, 290, 'life'));
                 
-                door = new Door(700, 250);
+                door = new Door(650, 270);
+                
+            } else if (levelNum === 3) {
+                // Level 3 - VOLCANO with lava golems, lava, and fire
+                platforms.push(new Platform(100, 400, 90, 20));
+                platforms.push(new Platform(250, 320, 100, 20));
+                platforms.push(new Platform(420, 380, 90, 20));
+                platforms.push(new Platform(350, 240, 120, 20));
+                platforms.push(new Platform(600, 300, 100, 20));
+                
+                // Lava golem enemies (stronger)
+                enemies.push(new Enemy(130, 350, 'melee', 'lava_golem'));
+                enemies.push(new Enemy(280, 270, 'melee', 'lava_golem'));
+                enemies.push(new Enemy(450, 330, 'ranged', 'lava_golem'));
+                
+                // Volcano hazards - lots of lava
+                hazards.push(new Hazard(190, 540, 60, 20, 'lava'));
+                hazards.push(new Hazard(350, 540, 70, 20, 'lava'));
+                hazards.push(new Hazard(510, 540, 80, 20, 'lava'));
+                hazards.push(new Hazard(300, 540, 30, 30, 'tnt')); // Volcanic explosion
+                
+                // Bonus boxes
+                bonusBoxes.push(new BonusBox(380, 210, 'life'));
+                bonusBoxes.push(new BonusBox(630, 270, 'arrows'));
+                
+                door = new Door(650, 250);
+                
+            } else if (levelNum === 4) {
+                // Level 4 - ICE with snowmen, ice pits, and ice spikes
+                platforms.push(new Platform(80, 420, 110, 20));
+                platforms.push(new Platform(250, 350, 100, 20));
+                platforms.push(new Platform(420, 280, 120, 20));
+                platforms.push(new Platform(150, 200, 90, 20));
+                platforms.push(new Platform(500, 150, 100, 20));
+                platforms.push(new Platform(650, 250, 90, 20));
+                
+                // Snowman enemies
+                enemies.push(new Enemy(110, 370, 'melee', 'snowman'));
+                enemies.push(new Enemy(280, 300, 'melee', 'snowman'));
+                enemies.push(new Enemy(450, 230, 'ranged', 'snowman'));
+                enemies.push(new Enemy(530, 100, 'ranged', 'snowman'));
+                
+                // Ice hazards - ice spikes and pits
+                hazards.push(new Hazard(190, 540, 60, 20, 'ice_spikes'));
+                hazards.push(new Hazard(350, 540, 70, 20, 'ice_spikes'));
+                hazards.push(new Hazard(580, 540, 80, 20, 'ice_spikes'));
+                
+                // Bonus boxes
+                bonusBoxes.push(new BonusBox(180, 170, 'life'));
+                bonusBoxes.push(new BonusBox(530, 120, 'arrows'));
+                bonusBoxes.push(new BonusBox(680, 220, 'speed'));
+                
+                door = new Door(680, 200);
                 
             } else {
-                // Progressive levels
+                // Progressive levels (after level 4, cycle through themes)
+                const themeIndex = (levelNum - 1) % 4;
+                const themes = ['monkey', 'scorpion', 'lava_golem', 'snowman'];
+                const hazardTypes = [
+                    ['spikes'],
+                    ['quicksand', 'spikes'],
+                    ['lava', 'tnt'],
+                    ['ice_spikes']
+                ];
+                
+                const currentTheme = themes[themeIndex];
+                const currentHazards = hazardTypes[themeIndex];
+                
                 const numPlatforms = Math.min(8, 4 + levelNum);
                 const numEnemies = Math.min(6, 2 + levelNum);
                 
@@ -1552,8 +1831,8 @@
                 for (let i = 0; i < numEnemies; i++) {
                     const x = Math.random() * (canvas.width - 50);
                     const y = 100;
-                    const type = Math.random() > 0.5 ? 'melee' : Math.random() > 0.5 ? 'ranged' : 'magic';
-                    enemies.push(new Enemy(x, y, type));
+                    const type = Math.random() > 0.5 ? 'melee' : 'ranged';
+                    enemies.push(new Enemy(x, y, type, currentTheme));
                 }
                 
                 // Add random bonus boxes
@@ -1564,13 +1843,13 @@
                     bonusBoxes.push(new BonusBox(x, y, type));
                 }
                 
-                // Add hazards
+                // Add themed hazards
                 const numHazards = Math.min(5, levelNum);
                 for (let i = 0; i < numHazards; i++) {
                     const x = Math.random() * (canvas.width - 100);
-                    const hazardType = Math.random() > 0.6 ? 'lava' : Math.random() > 0.5 ? 'spikes' : 'tnt';
+                    const hazardType = currentHazards[Math.floor(Math.random() * currentHazards.length)];
                     let width = hazardType === 'tnt' ? 30 : 50 + Math.random() * 50;
-                    let height = hazardType === 'tnt' ? 30 : hazardType === 'spikes' ? 20 : 20;
+                    let height = hazardType === 'tnt' ? 30 : 20;
                     hazards.push(new Hazard(x, canvas.height - 40 - height, width, height, hazardType));
                 }
                 
@@ -1595,6 +1874,7 @@
             hideAllMenus();
             showLevelDisplay();
             updateUI();
+            gameLoopRunning = true;
             gameLoop();
         }
 
@@ -1623,6 +1903,12 @@
             hideAllMenus();
             showLevelDisplay();
             updateUI();
+            
+            // Ensure game loop continues with canvas rerendering
+            if (!gameLoopRunning) {
+                gameLoopRunning = true;
+                gameLoop();
+            }
         }
 
         function gameOver() {
@@ -1669,6 +1955,99 @@
 
         function hideLevelDisplay() {
             document.getElementById('levelDisplay').style.display = 'none';
+        }
+
+        function drawThemedBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            
+            // Theme backgrounds based on level
+            const themeIndex = ((gameState.level - 1) % 4);
+            
+            switch (themeIndex) {
+                case 0: // Jungle
+                    gradient.addColorStop(0, '#228B22');
+                    gradient.addColorStop(0.6, '#32CD32');
+                    gradient.addColorStop(1, '#006400');
+                    break;
+                case 1: // Desert  
+                    gradient.addColorStop(0, '#F4A460');
+                    gradient.addColorStop(0.6, '#DEB887');
+                    gradient.addColorStop(1, '#D2691E');
+                    break;
+                case 2: // Volcano
+                    gradient.addColorStop(0, '#FF4500');
+                    gradient.addColorStop(0.6, '#FF6347');
+                    gradient.addColorStop(1, '#8B0000');
+                    break;
+                case 3: // Ice
+                    gradient.addColorStop(0, '#87CEEB');
+                    gradient.addColorStop(0.6, '#B0E0E6');
+                    gradient.addColorStop(1, '#4682B4');
+                    break;
+                default: // Default blue
+                    gradient.addColorStop(0, '#3498db');
+                    gradient.addColorStop(1, '#2c3e50');
+                    break;
+            }
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Add themed environmental effects
+            addEnvironmentalEffects(themeIndex);
+        }
+
+        function addEnvironmentalEffects(themeIndex) {
+            switch (themeIndex) {
+                case 0: // Jungle - leaves falling
+                    if (Math.random() < 0.02) {
+                        particles.push(new Particle(
+                            Math.random() * canvas.width,
+                            -10,
+                            Math.random() * 2 - 1,
+                            Math.random() * 3 + 1,
+                            '#228B22',
+                            120
+                        ));
+                    }
+                    break;
+                case 1: // Desert - sand particles
+                    if (Math.random() < 0.01) {
+                        particles.push(new Particle(
+                            Math.random() * canvas.width,
+                            Math.random() * canvas.height,
+                            Math.random() * 4 - 2,
+                            Math.random() * 2 - 1,
+                            '#DEB887',
+                            60
+                        ));
+                    }
+                    break;
+                case 2: // Volcano - ember particles
+                    if (Math.random() < 0.03) {
+                        particles.push(new Particle(
+                            Math.random() * canvas.width,
+                            canvas.height + 10,
+                            Math.random() * 2 - 1,
+                            -Math.random() * 4 - 2,
+                            Math.random() > 0.5 ? '#FF4500' : '#FFD700',
+                            80
+                        ));
+                    }
+                    break;
+                case 3: // Ice - snowflakes
+                    if (Math.random() < 0.015) {
+                        particles.push(new Particle(
+                            Math.random() * canvas.width,
+                            -10,
+                            Math.random() * 1 - 0.5,
+                            Math.random() * 2 + 1,
+                            '#F0F8FF',
+                            100
+                        ));
+                    }
+                    break;
+            }
         }
 
         function updateUI() {
@@ -1743,19 +2122,19 @@
             if (gameState.current !== 'playing' || gameState.paused) {
                 if (gameState.current === 'playing') {
                     requestAnimationFrame(gameLoop);
+                } else {
+                    gameLoopRunning = false;
                 }
                 return;
             }
 
+            gameLoopRunning = true;
+
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw background
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#3498db');
-            gradient.addColorStop(1, '#2c3e50');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Draw themed background based on level
+            drawThemedBackground();
 
             // Update and draw game objects
             if (player) {
