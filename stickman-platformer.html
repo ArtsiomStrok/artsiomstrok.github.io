@@ -379,12 +379,16 @@
             swordAttack() {
                 if (this.attackCooldown > 0) return;
                 
-                this.attackCooldown = 30;
+                this.attackCooldown = 15; // Faster animation
                 
-                // Check for enemies in range (distance equals stickman width)
+                // Check for enemies in front of the stickman
                 for (let enemy of enemies) {
-                    const distance = Math.abs(this.x - enemy.x);
-                    if (distance < this.width && Math.abs(this.y - enemy.y) < 50) {
+                    // Calculate if enemy is in front based on facing direction
+                    const isInFront = this.facing === 1 ? 
+                        (enemy.x >= this.x && enemy.x <= this.x + this.width + 25) :
+                        (enemy.x <= this.x + this.width && enemy.x >= this.x - 25);
+                    
+                    if (isInFront && Math.abs(this.y - enemy.y) < 50) {
                         enemy.takeDamage(gameState.swordDamage);
                         // Add hit effect
                         this.createHitEffect(enemy.x, enemy.y);
@@ -457,19 +461,29 @@
             drawSword(weaponY) {
                 ctx.save();
                 
-                // Calculate sword position and animation
-                const swordLength = 20;
+                // Calculate sword position and animation (faster)
+                const swordLength = 25;
                 const handleLength = 6;
-                const attackProgress = (30 - this.attackCooldown) / 30; // 0 to 1
+                const attackProgress = (15 - this.attackCooldown) / 15; // 0 to 1 (faster)
                 
-                // Sword swing animation (arc from -45° to +45°)
-                const swingAngle = (attackProgress * 90 - 45) * Math.PI / 180;
-                const swordX = this.x + this.width/2 + this.facing * 8;
+                // Position sword in front of stickman based on facing direction
+                const baseOffsetX = this.facing * 12; // Base position offset
+                const extendDistance = attackProgress * 15; // Sword extends forward during attack
+                const swordX = this.x + this.width/2 + baseOffsetX + (this.facing * extendDistance);
                 const swordY = weaponY;
+                
+                // Sword thrust animation (slight rotation for effect)
+                const thrustAngle = Math.sin(attackProgress * Math.PI) * 15 * Math.PI / 180;
                 
                 // Move to sword base position
                 ctx.translate(swordX, swordY);
-                ctx.rotate(swingAngle * this.facing);
+                
+                // Rotate sword slightly during thrust
+                if (this.facing === 1) {
+                    ctx.rotate(-Math.PI/2 + thrustAngle); // Point right with slight rotation
+                } else {
+                    ctx.rotate(Math.PI/2 - thrustAngle); // Point left with slight rotation
+                }
                 
                 // Draw sword handle
                 ctx.fillStyle = '#8B4513'; // Brown handle
@@ -486,11 +500,19 @@
                 ctx.lineTo(1, -swordLength);
                 ctx.fill();
                 
-                // Add blade shine effect
-                if (attackProgress > 0.3 && attackProgress < 0.7) {
+                // Add blade shine effect during thrust
+                if (attackProgress > 0.2 && attackProgress < 0.8) {
                     ctx.fillStyle = '#FFFFFF';
-                    ctx.globalAlpha = 0.6;
+                    ctx.globalAlpha = 0.8;
                     ctx.fillRect(0, -swordLength + 2, 1, swordLength - 4);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // Add motion blur effect at peak thrust
+                if (attackProgress > 0.4 && attackProgress < 0.6) {
+                    ctx.fillStyle = '#C0C0C0';
+                    ctx.globalAlpha = 0.3;
+                    ctx.fillRect(-3, -swordLength, 6, swordLength);
                     ctx.globalAlpha = 1;
                 }
                 
