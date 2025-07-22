@@ -381,17 +381,30 @@
                 
                 this.attackCooldown = 15; // Faster animation
                 
-                // Check for enemies in front of the stickman
+                // Check for enemies in the sword's reach (fencing style with arm extension)
+                const swordLength = 30; // Constant sword length
+                const handleLength = 8;
+                const baseDistance = 10;
+                
                 for (let enemy of enemies) {
-                    // Calculate if enemy is in front based on facing direction
-                    const isInFront = this.facing === 1 ? 
-                        (enemy.x >= this.x && enemy.x <= this.x + this.width + 25) :
-                        (enemy.x <= this.x + this.width && enemy.x >= this.x - 25);
+                    // Calculate sword tip position with arm extension
+                    const attackProgress = (15 - this.attackCooldown) / 15;
+                    const armExtension = Math.sin(attackProgress * Math.PI) * 15;
+                    const totalReach = baseDistance + armExtension + handleLength/2 + swordLength + 4; // +4 for tip
                     
-                    if (isInFront && Math.abs(this.y - enemy.y) < 50) {
+                    // Check if enemy is within sword reach in front of stickman
+                    const isInReach = this.facing === 1 ? 
+                        (enemy.x >= this.x + this.width/2 && enemy.x <= this.x + this.width/2 + totalReach) :
+                        (enemy.x <= this.x + this.width/2 && enemy.x >= this.x + this.width/2 - totalReach);
+                    
+                    // Check vertical alignment (sword is at weapon height)
+                    const enemyMidY = enemy.y + enemy.height/2;
+                    const weaponY = this.crouching ? this.y + 25 : this.y + 20;
+                    
+                    if (isInReach && Math.abs(enemyMidY - weaponY) < 25) {
                         enemy.takeDamage(gameState.swordDamage);
-                        // Add hit effect
-                        this.createHitEffect(enemy.x, enemy.y);
+                        // Add hit effect at enemy position
+                        this.createHitEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
                     }
                 }
             }
@@ -461,59 +474,104 @@
             drawSword(weaponY) {
                 ctx.save();
                 
-                // Calculate sword position and animation (faster)
-                const swordLength = 25;
-                const handleLength = 6;
-                const attackProgress = (15 - this.attackCooldown) / 15; // 0 to 1 (faster)
+                // Calculate sword position and animation for fencing thrust
+                const swordLength = 30;
+                const handleLength = 8;
+                const attackProgress = (15 - this.attackCooldown) / 15; // 0 to 1
                 
-                // Position sword in front of stickman based on facing direction
-                const baseOffsetX = this.facing * 12; // Base position offset
-                const extendDistance = attackProgress * 15; // Sword extends forward during attack
-                const swordX = this.x + this.width/2 + baseOffsetX + (this.facing * extendDistance);
-                const swordY = weaponY;
+                // Arm extension during thrust - arm extends forward
+                const armExtension = Math.sin(attackProgress * Math.PI) * 15; // Smooth arm extension
+                const baseDistance = 10; // Base distance from stickman
                 
-                // Sword thrust animation (slight rotation for effect)
-                const thrustAngle = Math.sin(attackProgress * Math.PI) * 15 * Math.PI / 180;
+                // Position sword handle at extended arm position
+                const handleX = this.x + this.width/2 + (this.facing * (baseDistance + armExtension));
+                const handleY = weaponY;
                 
-                // Move to sword base position
-                ctx.translate(swordX, swordY);
+                // Sword blade extends from handle (constant size)
+                const bladeStartX = handleX + (this.facing * handleLength/2);
+                const bladeEndX = bladeStartX + (this.facing * swordLength);
                 
-                // Rotate sword slightly during thrust
-                if (this.facing === 1) {
-                    ctx.rotate(-Math.PI/2 + thrustAngle); // Point right with slight rotation
-                } else {
-                    ctx.rotate(Math.PI/2 - thrustAngle); // Point left with slight rotation
+                // Draw extended arm during attack
+                if (attackProgress > 0.1) {
+                    ctx.fillStyle = '#2c3e50'; // Same color as stickman
+                    const armStartX = this.x + this.width/2 + (this.facing * 8);
+                    const armEndX = handleX;
+                    const armWidth = 3;
+                    
+                    // Draw extended arm
+                    ctx.fillRect(
+                        Math.min(armStartX, armEndX) - armWidth/2, 
+                        handleY - armWidth/2, 
+                        Math.abs(armEndX - armStartX) + armWidth, 
+                        armWidth
+                    );
                 }
                 
-                // Draw sword handle
+                // Draw sword handle (vertical grip)
                 ctx.fillStyle = '#8B4513'; // Brown handle
-                ctx.fillRect(-2, 0, 4, handleLength);
+                ctx.fillRect(handleX - 2, handleY - handleLength/2, 4, handleLength);
                 
-                // Draw sword blade
+                // Draw hand guard
+                ctx.fillStyle = '#A0A0A0'; // Gray guard
+                ctx.fillRect(handleX - 3, handleY - 1, 6, 2);
+                
+                // Draw sword blade (horizontal, constant size)
                 ctx.fillStyle = '#C0C0C0'; // Silver blade
-                ctx.fillRect(-1, -swordLength, 2, swordLength);
+                const bladeWidth = 3;
+                const bladeY = handleY - bladeWidth/2;
                 
-                // Draw sword tip
-                ctx.beginPath();
-                ctx.moveTo(-1, -swordLength);
-                ctx.lineTo(0, -swordLength - 3);
-                ctx.lineTo(1, -swordLength);
-                ctx.fill();
-                
-                // Add blade shine effect during thrust
-                if (attackProgress > 0.2 && attackProgress < 0.8) {
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.globalAlpha = 0.8;
-                    ctx.fillRect(0, -swordLength + 2, 1, swordLength - 4);
-                    ctx.globalAlpha = 1;
-                }
-                
-                // Add motion blur effect at peak thrust
-                if (attackProgress > 0.4 && attackProgress < 0.6) {
-                    ctx.fillStyle = '#C0C0C0';
-                    ctx.globalAlpha = 0.3;
-                    ctx.fillRect(-3, -swordLength, 6, swordLength);
-                    ctx.globalAlpha = 1;
+                if (this.facing === 1) {
+                    // Facing right - blade extends right
+                    ctx.fillRect(bladeStartX, bladeY, swordLength, bladeWidth);
+                    
+                    // Draw sword tip
+                    ctx.beginPath();
+                    ctx.moveTo(bladeEndX, bladeY);
+                    ctx.lineTo(bladeEndX + 4, handleY);
+                    ctx.lineTo(bladeEndX, bladeY + bladeWidth);
+                    ctx.fill();
+                    
+                    // Blade shine effect
+                    if (attackProgress > 0.2 && attackProgress < 0.8) {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.globalAlpha = 0.8;
+                        ctx.fillRect(bladeStartX + 2, handleY - 0.5, swordLength - 4, 1);
+                        ctx.globalAlpha = 1;
+                    }
+                    
+                    // Motion blur during thrust
+                    if (attackProgress > 0.4 && attackProgress < 0.6) {
+                        ctx.fillStyle = '#C0C0C0';
+                        ctx.globalAlpha = 0.3;
+                        ctx.fillRect(bladeStartX, bladeY - 1, swordLength, bladeWidth + 2);
+                        ctx.globalAlpha = 1;
+                    }
+                } else {
+                    // Facing left - blade extends left
+                    ctx.fillRect(bladeEndX, bladeY, swordLength, bladeWidth);
+                    
+                    // Draw sword tip
+                    ctx.beginPath();
+                    ctx.moveTo(bladeEndX, bladeY);
+                    ctx.lineTo(bladeEndX - 4, handleY);
+                    ctx.lineTo(bladeEndX, bladeY + bladeWidth);
+                    ctx.fill();
+                    
+                    // Blade shine effect
+                    if (attackProgress > 0.2 && attackProgress < 0.8) {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.globalAlpha = 0.8;
+                        ctx.fillRect(bladeEndX + 2, handleY - 0.5, swordLength - 4, 1);
+                        ctx.globalAlpha = 1;
+                    }
+                    
+                    // Motion blur during thrust
+                    if (attackProgress > 0.4 && attackProgress < 0.6) {
+                        ctx.fillStyle = '#C0C0C0';
+                        ctx.globalAlpha = 0.3;
+                        ctx.fillRect(bladeEndX, bladeY - 1, swordLength, bladeWidth + 2);
+                        ctx.globalAlpha = 1;
+                    }
                 }
                 
                 ctx.restore();
