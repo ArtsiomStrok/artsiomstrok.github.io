@@ -92,10 +92,16 @@
             background: #666;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px;
             cursor: pointer;
-            border-radius: 5px;
-            font-size: 14px;
+            border-radius: 50%;
+            font-size: 18px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
 
         .back-btn:hover {
@@ -105,7 +111,7 @@
         .fullscreen-btn {
             position: absolute;
             top: 10px;
-            right: 120px;
+            right: 52px;
             background: #444;
             color: white;
             border: none;
@@ -190,8 +196,10 @@
             top: 20px;
             right: 20px;
             z-index: 30;
-            padding: 12px 20px;
-            font-size: 16px;
+            padding: 10px;
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
         }
 
         .game-container:fullscreen .fullscreen-btn,
@@ -201,7 +209,7 @@
         .game-container.mobile-fullscreen .fullscreen-btn {
             position: fixed;
             top: 20px;
-            right: 140px;
+            right: 70px;
             z-index: 30;
             padding: 12px 20px;
             font-size: 16px;
@@ -304,13 +312,15 @@
             .back-btn {
                 top: 5px;
                 right: 5px;
-                padding: 6px 12px;
-                font-size: 12px;
+                padding: 6px;
+                font-size: 16px;
+                width: 28px;
+                height: 28px;
             }
 
             .fullscreen-btn {
                 top: 5px;
-                right: 90px;
+                right: 40px;
                 padding: 6px 12px;
                 font-size: 12px;
             }
@@ -391,7 +401,14 @@
                 left: 10px;
             }
 
-            .mobile-fullscreen .back-btn,
+            .mobile-fullscreen .back-btn {
+                top: 10px;
+                padding: 8px;
+                font-size: 18px;
+                width: 36px;
+                height: 36px;
+            }
+
             .mobile-fullscreen .fullscreen-btn {
                 top: 10px;
                 padding: 8px 16px;
@@ -430,7 +447,7 @@
         <button class="fullscreen-btn" onclick="toggleFullscreen()" id="fullscreenBtn">
             <span id="fullscreenIcon">⛶</span> Fullscreen
         </button>
-        <button class="back-btn" onclick="goHome()">← Back to Store</button>
+        <button class="back-btn" onclick="goHome()">×</button>
 
         <!-- Mobile Controls -->
         <div class="mobile-controls">
