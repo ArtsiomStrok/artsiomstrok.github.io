@@ -459,32 +459,44 @@
                 
                 ctx.fillStyle = '#2c3e50';
                 
+                // Calculate head position based on crouching state
+                const headY = this.crouching ? this.y + 18 : this.y + 8;
+                const weaponY = this.crouching ? this.y + 25 : this.y + 20;
+                
                 // Body
                 if (this.crouching) {
+                    // Crouched body - shorter and wider
                     ctx.fillRect(this.x + 5, this.y + 20, this.width - 10, this.height - 20);
+                    
+                    // Crouched arms - positioned lower
+                    ctx.fillRect(this.x + 2, this.y + 22, 5, 8);
+                    ctx.fillRect(this.x + 13, this.y + 22, 5, 8);
+                    
+                    // Crouched legs - folded under
+                    ctx.fillRect(this.x + 4, this.y + 30, 4, 8);
+                    ctx.fillRect(this.x + 12, this.y + 30, 4, 8);
                 } else {
-                    ctx.fillRect(this.x + 7, this.y + 10, 6, 20); // Body
-                }
-                
-                // Head
-                ctx.beginPath();
-                ctx.arc(this.x + this.width/2, this.y + 8, 8, 0, Math.PI * 2);
-                ctx.fill();
-                
-                if (!this.crouching) {
-                    // Arms
+                    // Standing body
+                    ctx.fillRect(this.x + 7, this.y + 10, 6, 20);
+                    
+                    // Standing arms
                     ctx.fillRect(this.x + 3, this.y + 15, 4, 10);
                     ctx.fillRect(this.x + 13, this.y + 15, 4, 10);
                     
-                    // Legs
+                    // Standing legs
                     ctx.fillRect(this.x + 6, this.y + 30, 3, 10);
                     ctx.fillRect(this.x + 11, this.y + 30, 3, 10);
                 }
                 
+                // Head - positioned based on crouching state
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, headY, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
                 // Weapon indicator
                 if (this.attackCooldown > 0) {
                     ctx.fillStyle = '#e74c3c';
-                    ctx.fillRect(this.x + this.width/2 + this.facing * 15, this.y + 20, 3, 15);
+                    ctx.fillRect(this.x + this.width/2 + this.facing * 15, weaponY, 3, 15);
                 }
                 
                 ctx.restore();
