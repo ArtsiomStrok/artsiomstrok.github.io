@@ -852,20 +852,23 @@
                    /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         };
 
-        // Speed multiplier for mobile devices (lower = slower)
-        const MOBILE_SPEED_MULTIPLIER = 0.6;
+        // Speed multipliers for mobile devices (lower = slower)
+        const MOBILE_SPEED_MULTIPLIER = 0.6;  // Horizontal movement, projectiles
+        const MOBILE_JUMP_MULTIPLIER = 0.85;  // Jump power - less reduction to maintain platform reachability
         const speedMultiplier = isMobileDevice() ? MOBILE_SPEED_MULTIPLIER : 1.0;
+        const jumpMultiplier = isMobileDevice() ? MOBILE_JUMP_MULTIPLIER : 1.0;
 
         // Debug: Log speed settings
         console.log('Game Speed Settings:', {
             isMobile: isMobileDevice(),
             speedMultiplier: speedMultiplier,
+            jumpMultiplier: jumpMultiplier,
             device: navigator.userAgent.substr(0, 50) + '...'
         });
 
         // Global speed adjustment function for testing
-        window.adjustGameSpeed = function(multiplier) {
-            console.log(`Adjusting game speed to ${multiplier}x`);
+        window.adjustGameSpeed = function(speedMult, jumpMult = null) {
+            console.log(`Adjusting game speed to ${speedMult}x${jumpMult ? `, jump to ${jumpMult}x` : ''}`);
             // Note: This requires restarting the level for full effect
             window.location.reload();
         };
@@ -915,7 +918,7 @@
                 this.vx = 0;
                 this.vy = 0;
                 this.speed = 5 * speedMultiplier;
-                this.jumpPower = 15 * speedMultiplier;
+                this.jumpPower = 15 * jumpMultiplier;
                 this.onGround = false;
                 this.crouching = false;
                 this.health = gameState.lives;
@@ -3095,7 +3098,7 @@
                         z-index: 1000;
                         pointer-events: none;
                     `;
-                    speedDebug.innerHTML = `📱 Speed: ${Math.round(speedMultiplier * 100)}%`;
+                    speedDebug.innerHTML = `📱 Speed: ${Math.round(speedMultiplier * 100)}% | Jump: ${Math.round(jumpMultiplier * 100)}%`;
                     document.querySelector('.ui').appendChild(speedDebug);
                 }
             }
