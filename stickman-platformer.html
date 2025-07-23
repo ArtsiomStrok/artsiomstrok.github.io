@@ -241,8 +241,11 @@
             bottom: 20px;
             left: 20px;
             position: relative;
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Default portrait positioning */
@@ -251,8 +254,11 @@
                 bottom: 20px;
                 left: 20px;
                 position: absolute;
-                width: 150px;
-                height: 150px;
+                width: 120px;
+                height: 120px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             .control-group.attack {
@@ -260,96 +266,205 @@
                 right: 20px;
                 position: absolute;
                 flex-direction: row;
-                gap: 15px;
+                gap: 20px;
             }
         }
 
-        .control-group.movement #jumpBtn {
-            position: absolute;
-            top: 0;
-            left: 50px;
+        /* Joystick Styling */
+        .joystick-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
         }
 
-        .control-group.movement #leftBtn {
-            position: absolute;
-            top: 50px;
-            left: 0;
+        .joystick-outer {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(52, 152, 219, 0.2);
+            border: 3px solid rgba(52, 152, 219, 0.6);
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
-        .control-group.movement #rightBtn {
+        .joystick-inner {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, rgba(52, 152, 219, 0.8), rgba(52, 152, 219, 1));
+            border: 2px solid rgba(255, 255, 255, 0.8);
             position: absolute;
-            top: 50px;
-            right: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            transition: all 0.1s ease;
         }
 
-        .control-group.movement #crouchBtn {
+        .joystick-inner:active {
+            background: linear-gradient(45deg, rgba(52, 152, 219, 1), rgba(41, 128, 185, 1));
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* Joystick Direction Indicators */
+        .joystick-indicator {
             position: absolute;
-            bottom: 0;
-            left: 50px;
+            width: 20px;
+            height: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        .joystick-indicator.up {
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(46, 204, 113, 0.8); /* Green for jump */
+        }
+
+        .joystick-indicator.down {
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(241, 196, 15, 0.8); /* Yellow for crouch */
+        }
+
+        .joystick-indicator.left {
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .joystick-indicator.right {
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .joystick-indicator.active {
+            color: rgba(255, 255, 255, 1);
+            transform: translateX(-50%) scale(1.2);
+        }
+
+        .joystick-indicator.up.active {
+            color: rgba(46, 204, 113, 1);
+            transform: translateX(-50%) scale(1.2);
+        }
+
+        .joystick-indicator.down.active {
+            color: rgba(241, 196, 15, 1);
+            transform: translateX(-50%) scale(1.2);
+        }
+
+        .joystick-indicator.left.active {
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        .joystick-indicator.right.active {
+            transform: translateY(-50%) scale(1.2);
         }
 
         .control-group.attack {
             bottom: 20px;
             right: 20px;
             display: flex;
-            gap: 15px;
+            gap: 20px;
         }
 
-        .control-btn {
-            width: 50px;
-            height: 50px;
-            background: rgba(52, 152, 219, 0.3);
-            border: 2px solid rgba(52, 152, 219, 0.5);
-            border-radius: 10px;
+        /* Attack Buttons - Bigger and More Prominent */
+        .attack-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
             color: white;
-            font-size: 18px;
+            font-size: 24px;
+            font-weight: bold;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             user-select: none;
             touch-action: manipulation;
             transition: all 0.1s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             pointer-events: auto;
             z-index: 10001;
+            line-height: 1;
         }
 
-        .control-btn:active {
-            background: rgba(52, 152, 219, 0.6);
+        .attack-btn small {
+            font-size: 10px;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .sword-btn {
+            background: linear-gradient(45deg, rgba(231, 76, 60, 0.7), rgba(192, 57, 43, 0.8));
+            border: 3px solid rgba(192, 57, 43, 0.8);
+        }
+
+        .sword-btn:active {
+            background: linear-gradient(45deg, rgba(192, 57, 43, 1), rgba(169, 50, 38, 1));
             transform: scale(0.95);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .bow-btn {
+            background: linear-gradient(45deg, rgba(155, 89, 182, 0.7), rgba(142, 68, 173, 0.8));
+            border: 3px solid rgba(142, 68, 173, 0.8);
+        }
+
+        .bow-btn:active {
+            background: linear-gradient(45deg, rgba(142, 68, 173, 1), rgba(125, 60, 152, 1));
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
         }
 
 
 
         /* Enhanced visibility in fullscreen */
-        .game-container.fullscreen .control-btn {
-            background: rgba(52, 152, 219, 0.4);
-            border: 3px solid rgba(52, 152, 219, 0.6);
-            font-size: 20px;
-            width: 60px;
-            height: 60px;
+        .game-container.fullscreen .attack-btn {
+            width: 100px;
+            height: 100px;
+            font-size: 28px;
+        }
+
+        .game-container.fullscreen .attack-btn small {
+            font-size: 12px;
+        }
+
+        .game-container.fullscreen .joystick-outer {
+            width: 120px;
+            height: 120px;
+            border: 4px solid rgba(52, 152, 219, 0.8);
+        }
+
+        .game-container.fullscreen .joystick-inner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .game-container.fullscreen .joystick-container {
+            width: 120px;
+            height: 120px;
         }
 
         .game-container.fullscreen .control-group.movement {
-            width: 180px;
-            height: 180px;
+            width: 140px;
+            height: 140px;
         }
 
-        .game-container.fullscreen .control-group.movement #jumpBtn {
-            left: 60px;
-        }
-
-        .game-container.fullscreen .control-group.movement #leftBtn {
-            top: 60px;
-        }
-
-        .game-container.fullscreen .control-group.movement #rightBtn {
-            top: 60px;
-        }
-
-        .game-container.fullscreen .control-group.movement #crouchBtn {
-            left: 60px;
+        .game-container.fullscreen .joystick-indicator {
+            font-size: 18px;
+            width: 22px;
+            height: 22px;
         }
 
         /* Fullscreen styles */
@@ -464,10 +579,31 @@
                 bottom: 0;
             }
             
-            .control-btn {
-                width: 55px;
-                height: 55px;
-                font-size: 20px;
+            .attack-btn {
+                width: 85px;
+                height: 85px;
+                font-size: 26px;
+            }
+            
+            .attack-btn small {
+                font-size: 11px;
+            }
+            
+
+            
+            .joystick-outer {
+                width: 110px;
+                height: 110px;
+            }
+            
+            .joystick-inner {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .joystick-container {
+                width: 110px;
+                height: 110px;
             }
             
             /* Movement controls on LEFT side */
@@ -477,28 +613,11 @@
                 top: 50%;
                 transform: translateY(-50%);
                 width: 120px;
-                height: 160px;
+                height: 120px;
                 bottom: auto;
-            }
-            
-            .control-group.movement #jumpBtn {
-                top: 0;
-                left: 32.5px; /* Center in 120px container */
-            }
-
-            .control-group.movement #leftBtn {
-                top: 55px;
-                left: 0;
-            }
-
-            .control-group.movement #rightBtn {
-                top: 55px;
-                right: 0;
-            }
-
-            .control-group.movement #crouchBtn {
-                bottom: 0;
-                left: 32.5px; /* Center in 120px container */
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             /* Attack controls on RIGHT side */
@@ -635,10 +754,31 @@
                 margin: 0 120px !important; /* Center with 120px margins on each side */
             }
             
-            .control-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 18px;
+            .attack-btn {
+                width: 75px;
+                height: 75px;
+                font-size: 22px;
+            }
+            
+            .attack-btn small {
+                font-size: 10px;
+            }
+            
+
+            
+            .joystick-outer {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .joystick-inner {
+                width: 38px;
+                height: 38px;
+            }
+            
+            .joystick-container {
+                width: 90px;
+                height: 90px;
             }
             
             /* Movement controls on LEFT side */
@@ -648,28 +788,11 @@
                 top: 50%;
                 transform: translateY(-50%);
                 width: 100px;
-                height: 140px;
+                height: 100px;
                 bottom: auto;
-            }
-            
-            .control-group.movement #jumpBtn {
-                top: 0;
-                left: 25px;
-            }
-
-            .control-group.movement #leftBtn {
-                top: 45px;
-                left: 0;
-            }
-
-            .control-group.movement #rightBtn {
-                top: 45px;
-                right: 0;
-            }
-
-            .control-group.movement #crouchBtn {
-                bottom: 0;
-                left: 25px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             /* Attack controls on RIGHT side */
@@ -703,10 +826,31 @@
                 margin: 0 140px !important;
             }
             
-            .control-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 20px;
+            .attack-btn {
+                width: 95px;
+                height: 95px;
+                font-size: 28px;
+            }
+            
+            .attack-btn small {
+                font-size: 12px;
+            }
+            
+
+            
+            .joystick-outer {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .joystick-inner {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .joystick-container {
+                width: 120px;
+                height: 120px;
             }
             
             /* Movement controls on LEFT side */
@@ -716,28 +860,11 @@
                 top: 50%;
                 transform: translateY(-50%);
                 width: 120px;
-                height: 160px;
+                height: 120px;
                 bottom: auto;
-            }
-            
-            .control-group.movement #jumpBtn {
-                top: 0;
-                left: 30px;
-            }
-
-            .control-group.movement #leftBtn {
-                top: 50px;
-                left: 0;
-            }
-
-            .control-group.movement #rightBtn {
-                top: 50px;
-                right: 0;
-            }
-
-            .control-group.movement #crouchBtn {
-                bottom: 0;
-                left: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
             
             /* Attack controls on RIGHT side */
@@ -824,14 +951,19 @@
 
         <div class="mobile-controls">
             <div class="control-group movement">
-                <div class="control-btn" id="jumpBtn">↑</div>
-                <div class="control-btn" id="leftBtn">←</div>
-                <div class="control-btn" id="rightBtn">→</div>
-                <div class="control-btn" id="crouchBtn">↓</div>
+                <div class="joystick-container" id="joystickContainer">
+                    <div class="joystick-outer">
+                        <div class="joystick-inner" id="joystickInner"></div>
+                        <div class="joystick-indicator up">↑</div>
+                        <div class="joystick-indicator down">↓</div>
+                        <div class="joystick-indicator left">←</div>
+                        <div class="joystick-indicator right">→</div>
+                    </div>
+                </div>
             </div>
             <div class="control-group attack">
-                <div class="control-btn" id="swordBtn">⚔️</div>
-                <div class="control-btn" id="bowBtn">🏹</div>
+                <div class="attack-btn sword-btn" id="swordBtn">⚔️<br><small>SWORD</small></div>
+                <div class="attack-btn bow-btn" id="bowBtn">🏹<br><small>BOW</small></div>
             </div>
         </div>
 
@@ -3117,22 +3249,172 @@
             keys[e.key] = false;
         });
 
-        // Mobile controls
+        // Mobile controls with joystick support
         function setupMobileControls() {
-            const controls = {
-                leftBtn: 'left',
-                rightBtn: 'right',
-                jumpBtn: 'jump',
-                crouchBtn: 'crouch',
+            setupJoystick();
+            setupActionButtons();
+        }
+
+        function setupJoystick() {
+            const joystickContainer = document.getElementById('joystickContainer');
+            const joystickInner = document.getElementById('joystickInner');
+            
+            if (!joystickContainer || !joystickInner) return;
+            
+            let isDragging = false;
+            let startX, startY;
+            let centerX, centerY;
+            const maxDistance = 30; // Maximum distance from center
+            
+            function updateJoystickPosition() {
+                const rect = joystickContainer.getBoundingClientRect();
+                centerX = rect.left + rect.width / 2;
+                centerY = rect.top + rect.height / 2;
+            }
+            
+            function resetJoystick() {
+                joystickInner.style.transform = 'translate(-50%, -50%)';
+                touchControls.left = false;
+                touchControls.right = false;
+                touchControls.crouch = false;
+                touchControls.jump = false;
+                isDragging = false;
+                
+                // Clear all indicator active states
+                const indicators = joystickContainer.querySelectorAll('.joystick-indicator');
+                indicators.forEach(indicator => indicator.classList.remove('active'));
+            }
+            
+            function handleJoystickMove(clientX, clientY) {
+                if (!isDragging) return;
+                
+                const deltaX = clientX - centerX;
+                const deltaY = clientY - centerY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Constrain movement within the outer circle
+                const constrainedDistance = Math.min(distance, maxDistance);
+                const angle = Math.atan2(deltaY, deltaX);
+                
+                const constrainedX = Math.cos(angle) * constrainedDistance;
+                const constrainedY = Math.sin(angle) * constrainedDistance;
+                
+                // Update joystick position
+                joystickInner.style.transform = `translate(calc(-50% + ${constrainedX}px), calc(-50% + ${constrainedY}px))`;
+                
+                // Determine input states based on joystick position
+                const threshold = 15; // Minimum distance to register input
+                
+                // Update indicator states and clear previous states
+                const indicators = {
+                    up: joystickContainer.querySelector('.joystick-indicator.up'),
+                    down: joystickContainer.querySelector('.joystick-indicator.down'),
+                    left: joystickContainer.querySelector('.joystick-indicator.left'),
+                    right: joystickContainer.querySelector('.joystick-indicator.right')
+                };
+                
+                // Clear all active states
+                Object.values(indicators).forEach(indicator => {
+                    if (indicator) indicator.classList.remove('active');
+                });
+                
+                // Horizontal movement
+                if (Math.abs(constrainedX) > threshold) {
+                    if (constrainedX < -threshold) {
+                        touchControls.left = true;
+                        touchControls.right = false;
+                        if (indicators.left) indicators.left.classList.add('active');
+                    } else {
+                        touchControls.left = false;
+                        touchControls.right = true;
+                        if (indicators.right) indicators.right.classList.add('active');
+                    }
+                } else {
+                    touchControls.left = false;
+                    touchControls.right = false;
+                }
+                
+                // Vertical movement - both jump and crouch
+                if (Math.abs(constrainedY) > threshold) {
+                    if (constrainedY < -threshold) {
+                        // Upward movement - Jump
+                        touchControls.jump = true;
+                        touchControls.crouch = false;
+                        if (indicators.up) indicators.up.classList.add('active');
+                    } else {
+                        // Downward movement - Crouch
+                        touchControls.jump = false;
+                        touchControls.crouch = true;
+                        if (indicators.down) indicators.down.classList.add('active');
+                    }
+                } else {
+                    touchControls.jump = false;
+                    touchControls.crouch = false;
+                }
+            }
+            
+            // Touch events for joystick
+            joystickContainer.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                updateJoystickPosition();
+                isDragging = true;
+                const touch = e.touches[0];
+                startX = touch.clientX;
+                startY = touch.clientY;
+                handleJoystickMove(touch.clientX, touch.clientY);
+            });
+            
+            joystickContainer.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (isDragging) {
+                    const touch = e.touches[0];
+                    handleJoystickMove(touch.clientX, touch.clientY);
+                }
+            });
+            
+            joystickContainer.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                resetJoystick();
+            });
+            
+            joystickContainer.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                resetJoystick();
+            });
+            
+            // Mouse events for testing on desktop
+            joystickContainer.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                updateJoystickPosition();
+                isDragging = true;
+                handleJoystickMove(e.clientX, e.clientY);
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    handleJoystickMove(e.clientX, e.clientY);
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    resetJoystick();
+                }
+            });
+        }
+
+        function setupActionButtons() {
+            // Attack buttons only - jump is now handled by joystick
+            const attackControls = {
                 swordBtn: 'sword',
                 bowBtn: 'bow'
             };
 
-            Object.keys(controls).forEach(btnId => {
+            Object.keys(attackControls).forEach(btnId => {
                 const btn = document.getElementById(btnId);
-                if (!btn) return; // Skip if button doesn't exist
+                if (!btn) return;
                 
-                const action = controls[btnId];
+                const action = attackControls[btnId];
                 
                 btn.addEventListener('touchstart', (e) => {
                     e.preventDefault();
@@ -3146,16 +3428,12 @@
                     touchControls[action] = false;
                 });
                 
-                // Prevent context menu on long press
-                btn.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                });
-                
-                // Handle touch cancel (when finger leaves button area)
                 btn.addEventListener('touchcancel', (e) => {
                     e.preventDefault();
                     touchControls[action] = false;
                 });
+                
+                btn.addEventListener('contextmenu', (e) => e.preventDefault());
             });
         }
 
