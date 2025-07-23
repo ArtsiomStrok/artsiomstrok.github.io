@@ -27,6 +27,20 @@
             overflow: hidden;
         }
 
+        /* Landscape mode body adjustments */
+        @media (orientation: landscape) {
+            body {
+                overflow: hidden; /* Prevent scrolling in landscape mode */
+            }
+            
+            .game-container {
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: 100vh;
+            }
+        }
+
         .game-container {
             position: relative;
             border: 3px solid #3498db;
@@ -218,6 +232,25 @@
             height: 150px;
         }
 
+        /* Default portrait positioning */
+        @media (orientation: portrait) {
+            .control-group.movement {
+                bottom: 20px;
+                left: 20px;
+                position: absolute;
+                width: 150px;
+                height: 150px;
+            }
+            
+            .control-group.attack {
+                bottom: 20px;
+                right: 20px;
+                position: absolute;
+                flex-direction: row;
+                gap: 15px;
+            }
+        }
+
         .control-group.movement #jumpBtn {
             position: absolute;
             top: 0;
@@ -405,48 +438,266 @@
             display: block !important;
         }
 
-        /* Ensure mobile controls are visible in landscape mode */
-        @media (orientation: landscape) and (max-height: 500px) {
+        /* General Nintendo Switch-style landscape layout */
+        @media (orientation: landscape) {
             .mobile-controls {
                 display: block !important;
-                height: 100px; /* Reduce height in landscape */
-            }
-            
-            .game-container.fullscreen canvas {
-                height: calc(100vh - 120px) !important; /* Account for controls */
+                height: 100vh;
+                width: 100vw;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
             }
             
             .control-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 16px;
+                width: 55px;
+                height: 55px;
+                font-size: 20px;
             }
             
+            /* Movement controls on LEFT side */
             .control-group.movement {
-                width: 135px;
-                height: 135px;
-                bottom: 15px;
+                position: fixed;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 120px;
+                height: 160px;
+                bottom: auto;
             }
             
             .control-group.movement #jumpBtn {
-                left: 45px;
+                top: 0;
+                left: 32.5px; /* Center in 120px container */
+            }
+
+            .control-group.movement #leftBtn {
+                top: 55px;
+                left: 0;
+            }
+
+            .control-group.movement #rightBtn {
+                top: 55px;
+                right: 0;
+            }
+
+            .control-group.movement #crouchBtn {
+                bottom: 0;
+                left: 32.5px; /* Center in 120px container */
+            }
+            
+            /* Attack controls on RIGHT side */
+            .control-group.attack {
+                position: fixed;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                flex-direction: column;
+                gap: 20px;
+                bottom: auto;
+            }
+
+            /* Center the game canvas in landscape */
+            .game-container.fullscreen canvas {
+                width: calc(100vw - 280px) !important;
+                height: 100vh !important;
+                margin: 0 140px !important;
+                object-fit: contain;
+            }
+
+            /* Regular landscape mode (not fullscreen) */
+            .game-container canvas {
+                width: calc(100vw - 280px);
+                height: calc(100vh - 100px);
+                max-width: calc(100vw - 280px);
+                margin: 0 140px;
+                object-fit: contain;
+            }
+
+            /* UI elements positioning in landscape */
+            .ui {
+                left: 150px; /* Move UI right to avoid overlapping with left controls */
+                top: 10px;
+                z-index: 10001;
+            }
+
+            .level-display {
+                left: 50%;
+                transform: translateX(-50%);
+                top: 10px;
+                z-index: 10001;
+            }
+
+            .back-btn, .fullscreen-btn {
+                right: 150px; /* Move buttons left to avoid overlapping with right controls */
+            }
+
+            /* Visual enhancements for Nintendo Switch style */
+            .control-group {
+                background: rgba(0, 0, 0, 0.1);
+                border-radius: 15px;
+                padding: 10px;
+                backdrop-filter: blur(5px);
+            }
+
+            .control-group.movement::before {
+                content: "L";
+                position: absolute;
+                top: -25px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.6);
+                font-weight: bold;
+            }
+
+            .control-group.attack::before {
+                content: "R";
+                position: absolute;
+                top: -25px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 12px;
+                color: rgba(255, 255, 255, 0.6);
+                font-weight: bold;
+            }
+        }
+
+        /* Compact Nintendo Switch layout for smaller screens */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .mobile-controls {
+                display: block !important;
+                height: 100vh; /* Full height for side controls */
+                width: 100vw;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+            
+            .game-container.fullscreen canvas {
+                height: 100vh !important; /* Full height */
+                width: calc(100vw - 240px) !important; /* Leave space for side controls */
+                margin: 0 120px !important; /* Center with 120px margins on each side */
+            }
+            
+            .control-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 18px;
+            }
+            
+            /* Movement controls on LEFT side */
+            .control-group.movement {
+                position: fixed;
+                left: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 100px;
+                height: 140px;
+                bottom: auto;
+            }
+            
+            .control-group.movement #jumpBtn {
+                top: 0;
+                left: 25px;
             }
 
             .control-group.movement #leftBtn {
                 top: 45px;
+                left: 0;
             }
 
             .control-group.movement #rightBtn {
                 top: 45px;
+                right: 0;
             }
 
             .control-group.movement #crouchBtn {
-                left: 45px;
+                bottom: 0;
+                left: 25px;
             }
             
+            /* Attack controls on RIGHT side */
             .control-group.attack {
-                bottom: 15px;
-                gap: 10px;
+                position: fixed;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                flex-direction: column;
+                gap: 15px;
+                bottom: auto;
+            }
+        }
+
+        /* Enhanced Nintendo Switch layout for larger landscape screens */
+        @media (orientation: landscape) and (min-height: 500px) and (max-width: 900px) {
+            .mobile-controls {
+                display: block !important;
+                height: 100vh;
+                width: 100vw;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
+            
+            .game-container.fullscreen canvas {
+                height: 100vh !important;
+                width: calc(100vw - 280px) !important; /* More space for larger controls */
+                margin: 0 140px !important;
+            }
+            
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+            
+            /* Movement controls on LEFT side */
+            .control-group.movement {
+                position: fixed;
+                left: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 120px;
+                height: 160px;
+                bottom: auto;
+            }
+            
+            .control-group.movement #jumpBtn {
+                top: 0;
+                left: 30px;
+            }
+
+            .control-group.movement #leftBtn {
+                top: 50px;
+                left: 0;
+            }
+
+            .control-group.movement #rightBtn {
+                top: 50px;
+                right: 0;
+            }
+
+            .control-group.movement #crouchBtn {
+                bottom: 0;
+                left: 30px;
+            }
+            
+            /* Attack controls on RIGHT side */
+            .control-group.attack {
+                position: fixed;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                flex-direction: column;
+                gap: 20px;
+                bottom: auto;
             }
         }
 
