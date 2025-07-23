@@ -985,10 +985,12 @@
         };
 
         // Speed multipliers for mobile devices (lower = slower)
-        const MOBILE_SPEED_MULTIPLIER = 0.6;  // Horizontal movement, projectiles
-        const MOBILE_JUMP_MULTIPLIER = 0.85;  // Jump power - less reduction to maintain platform reachability
-        const speedMultiplier = isMobileDevice() ? MOBILE_SPEED_MULTIPLIER : 1.0;
-        const jumpMultiplier = isMobileDevice() ? MOBILE_JUMP_MULTIPLIER : 1.0;
+        const MOBILE_SPEED_MULTIPLIER = 0.4;  // Horizontal movement, projectiles (reduced from 0.6)
+        const MOBILE_JUMP_MULTIPLIER = 0.7;  // Jump power - less reduction to maintain platform reachability (reduced from 0.85)
+        const DESKTOP_SPEED_MULTIPLIER = 0.6; // Desktop speed multiplier (new - slower than original 1.0)
+        const DESKTOP_JUMP_MULTIPLIER = 0.8; // Desktop jump multiplier (new - slower than original 1.0)
+        const speedMultiplier = isMobileDevice() ? MOBILE_SPEED_MULTIPLIER : DESKTOP_SPEED_MULTIPLIER;
+        const jumpMultiplier = isMobileDevice() ? MOBILE_JUMP_MULTIPLIER : DESKTOP_JUMP_MULTIPLIER;
 
         // Global speed adjustment function for testing
         window.adjustGameSpeed = function(speedMult, jumpMult = null) {
