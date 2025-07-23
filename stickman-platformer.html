@@ -831,6 +831,32 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Mobile detection and speed adjustment
+        const isMobileDevice = () => {
+            return window.innerWidth <= 768 || 
+                   'ontouchstart' in window || 
+                   navigator.maxTouchPoints > 0 ||
+                   /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        };
+
+        // Speed multiplier for mobile devices (lower = slower)
+        const MOBILE_SPEED_MULTIPLIER = 0.6;
+        const speedMultiplier = isMobileDevice() ? MOBILE_SPEED_MULTIPLIER : 1.0;
+
+        // Debug: Log speed settings
+        console.log('Game Speed Settings:', {
+            isMobile: isMobileDevice(),
+            speedMultiplier: speedMultiplier,
+            device: navigator.userAgent.substr(0, 50) + '...'
+        });
+
+        // Global speed adjustment function for testing
+        window.adjustGameSpeed = function(multiplier) {
+            console.log(`Adjusting game speed to ${multiplier}x`);
+            // Note: This requires restarting the level for full effect
+            window.location.reload();
+        };
+
         // Game state
         let gameState = {
             current: 'menu', // menu, playing, upgrade, gameOver
@@ -875,8 +901,8 @@
                 this.height = 40;
                 this.vx = 0;
                 this.vy = 0;
-                this.speed = 5;
-                this.jumpPower = 15;
+                this.speed = 5 * speedMultiplier;
+                this.jumpPower = 15 * speedMultiplier;
                 this.onGround = false;
                 this.crouching = false;
                 this.health = gameState.lives;
@@ -928,7 +954,7 @@
                 }
 
                 // Physics
-                this.vy += 0.8; // Gravity
+                this.vy += 0.8 * speedMultiplier; // Gravity
                 this.x += this.vx;
                 this.y += this.vy;
 
@@ -1009,7 +1035,7 @@
                 projectiles.push(new Arrow(
                     this.x + this.width/2,
                     this.y + this.height/2,
-                    this.facing * 10,
+                    this.facing * 10 * speedMultiplier,
                     0,
                     gameState.bowDamage
                 ));
@@ -1498,7 +1524,7 @@
                 this.type = type;
                 this.variant = variant; // monkey, scorpion, lava_golem, snowman
                 this.health = variant === 'lava_golem' ? 4 : 2;
-                this.vx = type === 'melee' ? (Math.random() > 0.5 ? 1 : -1) : 0;
+                this.vx = type === 'melee' ? (Math.random() > 0.5 ? 1 : -1) * speedMultiplier : 0;
                 this.vy = 0;
                 this.shootCooldown = 0;
                 this.facing = this.vx > 0 ? 1 : -1;
@@ -1510,10 +1536,10 @@
                 if (this.type === 'melee') {
                     // Chase player
                     if (player.x < this.x) {
-                        this.vx = -1;
+                        this.vx = -1 * speedMultiplier;
                         this.facing = -1;
                     } else {
-                        this.vx = 1;
+                        this.vx = 1 * speedMultiplier;
                         this.facing = 1;
                     }
                 } else if (this.type === 'ranged') {
@@ -1526,7 +1552,7 @@
                 }
 
                 // Physics
-                this.vy += 0.8; // Gravity
+                this.vy += 0.8 * speedMultiplier; // Gravity
                 this.x += this.vx;
                 this.y += this.vy;
 
@@ -1556,8 +1582,8 @@
                 projectiles.push(new EnemyProjectile(
                     this.x + this.width/2,
                     this.y + this.height/2,
-                    Math.cos(angle) * 5,
-                    Math.sin(angle) * 5,
+                    Math.cos(angle) * 5 * speedMultiplier,
+                    Math.sin(angle) * 5 * speedMultiplier,
                     this.type === 'magic' ? 'fireball' : 'arrow'
                 ));
             }
@@ -2361,7 +2387,7 @@
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vy += 0.2; // Gravity
+                this.vy += 0.2 * speedMultiplier; // Gravity
                 this.life--;
             }
 
@@ -3026,6 +3052,29 @@
             const armorDisplay = document.getElementById('armorDisplay');
             const armorStars = '<span class="power-star">★</span>'.repeat(gameState.armor);
             armorDisplay.innerHTML = '🛡️ ' + (gameState.armor > 0 ? ' ' + armorStars : '');
+            
+            // Debug: Show speed multiplier on mobile
+            if (isMobileDevice()) {
+                const debugElement = document.getElementById('speedDebug');
+                if (!debugElement) {
+                    const speedDebug = document.createElement('div');
+                    speedDebug.id = 'speedDebug';
+                    speedDebug.style.cssText = `
+                        position: absolute;
+                        bottom: 5px;
+                        right: 5px;
+                        font-size: 10px;
+                        color: rgba(255, 255, 255, 0.6);
+                        background: rgba(0, 0, 0, 0.3);
+                        padding: 2px 6px;
+                        border-radius: 3px;
+                        z-index: 1000;
+                        pointer-events: none;
+                    `;
+                    speedDebug.innerHTML = `📱 Speed: ${Math.round(speedMultiplier * 100)}%`;
+                    document.querySelector('.ui').appendChild(speedDebug);
+                }
+            }
         }
 
         // Input handling
