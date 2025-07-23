@@ -142,6 +142,19 @@
             transform: scale(1.05);
         }
 
+        /* Remove focus outline from buttons to prevent visual distraction */
+        button:focus {
+            outline: none;
+        }
+
+        /* Prevent button focus styles from interfering with gameplay */
+        .back-btn:focus,
+        .fullscreen-btn:focus,
+        .upgrade-option:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
         .upgrade-menu {
             display: none;
         }
@@ -788,13 +801,13 @@
         <div class="menu upgrade-menu" id="upgradeMenu">
             <h2>🔧 Choose Your Upgrade</h2>
             <p style="margin-bottom: 20px;">Level Complete! Select one upgrade:</p>
-            <button class="upgrade-option" onclick="selectUpgrade('sword')">
+            <button class="upgrade-option" onclick="selectUpgrade('sword'); this.blur();">
                 ⚔️ Sword +1 Damage<br><small>Increase melee attack power</small>
             </button>
-            <button class="upgrade-option" onclick="selectUpgrade('bow')">
+            <button class="upgrade-option" onclick="selectUpgrade('bow'); this.blur();">
                 🏹 Bow +1 Damage<br><small>Increase ranged attack power</small>
             </button>
-            <button class="upgrade-option" onclick="selectUpgrade('armor')">
+            <button class="upgrade-option" onclick="selectUpgrade('armor'); this.blur();">
                 🛡️ Armor +1 Defense<br><small>Reduce incoming damage</small>
             </button>
         </div>
@@ -806,8 +819,8 @@
             <button onclick="goHome()">🏠 Main Menu</button>
         </div>
 
-        <button class="back-btn" onclick="handleBackButton()">×</button>
-        <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+        <button class="back-btn" onclick="handleBackButton(); this.blur();">×</button>
+        <button class="fullscreen-btn" onclick="toggleFullscreen(); this.blur();">⛶</button>
 
         <div class="mobile-controls">
             <div class="control-group movement">
@@ -2691,6 +2704,11 @@
             gameState.bowDamage = 1;
             gameState.armor = 0;
             
+            // Remove focus from any buttons to prevent keyboard conflicts
+            if (document.activeElement && document.activeElement.blur) {
+                document.activeElement.blur();
+            }
+            
             generateLevel(1);
             hideAllMenus();
             showLevelDisplay();
@@ -2721,6 +2739,12 @@
             gameState.level++;
             generateLevel(gameState.level);
             gameState.current = 'playing';
+            
+            // Remove focus from any buttons to prevent keyboard conflicts
+            if (document.activeElement && document.activeElement.blur) {
+                document.activeElement.blur();
+            }
+            
             hideAllMenus();
             showLevelDisplay();
             updateUI();
