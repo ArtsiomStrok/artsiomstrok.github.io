@@ -987,7 +987,7 @@
         // Speed multipliers for mobile devices (lower = slower)
         const MOBILE_SPEED_MULTIPLIER = 0.4;  // Horizontal movement, projectiles (reduced from 0.6)
         const MOBILE_JUMP_MULTIPLIER = 0.7;  // Jump power - less reduction to maintain platform reachability (reduced from 0.85)
-        const DESKTOP_SPEED_MULTIPLIER = 0.6; // Desktop speed multiplier (new - slower than original 1.0)
+        const DESKTOP_SPEED_MULTIPLIER = 0.5; // Desktop speed multiplier (new - slower than original 1.0)
         const DESKTOP_JUMP_MULTIPLIER = 0.8; // Desktop jump multiplier (new - slower than original 1.0)
         const speedMultiplier = isMobileDevice() ? MOBILE_SPEED_MULTIPLIER : DESKTOP_SPEED_MULTIPLIER;
         const jumpMultiplier = isMobileDevice() ? MOBILE_JUMP_MULTIPLIER : DESKTOP_JUMP_MULTIPLIER;
@@ -1184,6 +1184,9 @@
 
             takeDamage(amount = 1) {
                 if (this.invulnerable > 0) return;
+                
+                // Don't take damage if entering door
+                if (door && door.playerEntering) return;
                 
                 const actualDamage = Math.max(1, amount - gameState.armor);
                 gameState.lives -= actualDamage;
@@ -1494,6 +1497,11 @@
             }
 
             update() {
+                // Don't update moving platforms if player is entering door
+                if (door && door.playerEntering) {
+                    return;
+                }
+                
                 if (this.type === 'moving') {
                     this.x += this.vx;
                     this.y += this.vy;
@@ -1673,6 +1681,11 @@
             }
 
             update() {
+                // Don't update enemies if player is entering door
+                if (door && door.playerEntering) {
+                    return;
+                }
+                
                 // AI behavior
                 if (this.type === 'melee') {
                     // Chase player
@@ -1712,8 +1725,8 @@
                     this.facing = -this.facing;
                 }
 
-                // Check collision with player
-                if (this.collidesWith(player)) {
+                // Check collision with player - but not if entering door
+                if (this.collidesWith(player) && !(door && door.playerEntering)) {
                     player.takeDamage();
                 }
             }
@@ -1960,6 +1973,11 @@
             }
 
             update() {
+                // Don't update projectiles if player is entering door
+                if (door && door.playerEntering) {
+                    return;
+                }
+                
                 this.x += this.vx;
                 this.y += this.vy;
 
@@ -2015,11 +2033,16 @@
             }
 
             update() {
+                // Don't update enemy projectiles if player is entering door
+                if (door && door.playerEntering) {
+                    return;
+                }
+                
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // Check collision with player
-                if (this.collidesWith(player)) {
+                // Check collision with player - but not if entering door
+                if (this.collidesWith(player) && !(door && door.playerEntering)) {
                     player.takeDamage();
                     this.remove();
                 }
@@ -2079,8 +2102,8 @@
                 // Bobbing animation
                 this.bobOffset += 0.1;
                 
-                // Check collision with player
-                if (!this.collected && this.collidesWith(player)) {
+                // Check collision with player - but not if entering door
+                if (!this.collected && this.collidesWith(player) && !(door && door.playerEntering)) {
                     this.collect();
                 }
             }
@@ -2174,7 +2197,8 @@
             }
 
             update() {
-                if (this.collidesWith(player)) {
+                // Don't damage player if entering door
+                if (this.collidesWith(player) && !(door && door.playerEntering)) {
                     if (this.type === 'lava') {
                         player.takeDamage(3); // Instant death
                     } else if (this.type === 'quicksand') {
