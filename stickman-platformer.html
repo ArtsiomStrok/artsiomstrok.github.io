@@ -990,17 +990,8 @@
         const speedMultiplier = isMobileDevice() ? MOBILE_SPEED_MULTIPLIER : 1.0;
         const jumpMultiplier = isMobileDevice() ? MOBILE_JUMP_MULTIPLIER : 1.0;
 
-        // Debug: Log speed settings
-        console.log('Game Speed Settings:', {
-            isMobile: isMobileDevice(),
-            speedMultiplier: speedMultiplier,
-            jumpMultiplier: jumpMultiplier,
-            device: navigator.userAgent.substr(0, 50) + '...'
-        });
-
         // Global speed adjustment function for testing
         window.adjustGameSpeed = function(speedMult, jumpMult = null) {
-            console.log(`Adjusting game speed to ${speedMult}x${jumpMult ? `, jump to ${jumpMult}x` : ''}`);
             // Note: This requires restarting the level for full effect
             window.location.reload();
         };
@@ -3212,28 +3203,7 @@
             const armorStars = '<span class="power-star">★</span>'.repeat(gameState.armor);
             armorDisplay.innerHTML = '🛡️ ' + (gameState.armor > 0 ? ' ' + armorStars : '');
             
-            // Debug: Show speed multiplier on mobile
-            if (isMobileDevice()) {
-                const debugElement = document.getElementById('speedDebug');
-                if (!debugElement) {
-                    const speedDebug = document.createElement('div');
-                    speedDebug.id = 'speedDebug';
-                    speedDebug.style.cssText = `
-                        position: absolute;
-                        bottom: 5px;
-                        right: 5px;
-                        font-size: 10px;
-                        color: rgba(255, 255, 255, 0.6);
-                        background: rgba(0, 0, 0, 0.3);
-                        padding: 2px 6px;
-                        border-radius: 3px;
-                        z-index: 1000;
-                        pointer-events: none;
-                    `;
-                    speedDebug.innerHTML = `📱 Speed: ${Math.round(speedMultiplier * 100)}% | Jump: ${Math.round(jumpMultiplier * 100)}%`;
-                    document.querySelector('.ui').appendChild(speedDebug);
-                }
-            }
+
         }
 
         // Input handling
@@ -3524,7 +3494,6 @@
             if (mobileControls && isMobile) {
                 mobileControls.style.display = 'block';
                 mobileControls.style.zIndex = '9999';
-                console.log('Mobile controls forced visible for mobile device');
             }
         }
 
