@@ -534,6 +534,44 @@
                 right: 150px; /* Move buttons left to avoid overlapping with right controls */
             }
 
+            /* Enhanced fullscreen button for landscape */
+            .fullscreen-btn {
+                background: rgba(231, 76, 60, 0.8);
+                animation: pulse 2s infinite;
+            }
+
+            .fullscreen-btn:active {
+                background: rgba(231, 76, 60, 1);
+            }
+
+            @keyframes pulse {
+                0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+                50% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+            }
+
+            /* Exit fullscreen hint */
+            .game-container.fullscreen::after {
+                content: "Tap × to exit fullscreen";
+                position: fixed;
+                top: 60px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 5px;
+                font-size: 12px;
+                z-index: 10002;
+                animation: fadeInOut 3s ease-in-out;
+            }
+
+            @keyframes fadeInOut {
+                0% { opacity: 0; }
+                20% { opacity: 1; }
+                80% { opacity: 1; }
+                100% { opacity: 0; }
+            }
+
             /* Visual enhancements for Nintendo Switch style */
             .control-group {
                 background: rgba(0, 0, 0, 0.1);
@@ -768,7 +806,7 @@
             <button onclick="goHome()">🏠 Main Menu</button>
         </div>
 
-        <button class="back-btn" onclick="goToStore()">×</button>
+        <button class="back-btn" onclick="handleBackButton()">×</button>
         <button class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
 
         <div class="mobile-controls">
@@ -2685,8 +2723,37 @@
             document.getElementById('mainMenu').style.display = 'block';
         }
 
+        function handleBackButton() {
+            // If in fullscreen mode, first exit fullscreen
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+                exitFullscreen();
+                // Show visual feedback that fullscreen was exited
+                const backBtn = document.querySelector('.back-btn');
+                backBtn.innerHTML = '🏠'; // Change to home icon
+                backBtn.title = 'Return to Game Store';
+                
+                // Reset button after a short delay
+                setTimeout(() => {
+                    backBtn.innerHTML = '×';
+                    backBtn.title = '';
+                }, 1500);
+            } else {
+                // Not in fullscreen, go to store
+                goToStore();
+            }
+        }
+
         function goToStore() {
-            window.location.href = 'index.html';
+            // Exit fullscreen first if we're in fullscreen mode
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+                exitFullscreen();
+                // Give a moment for fullscreen to exit before navigating
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 100);
+            } else {
+                window.location.href = 'index.html';
+            }
         }
 
         function toggleFullscreen() {
@@ -2724,6 +2791,9 @@
                 
                 // Resize canvas for fullscreen
                 resizeCanvasForFullscreen();
+                
+                // Show hint for exiting fullscreen
+                setTimeout(showFullscreenHint, 1000);
             } else {
                 // Exit fullscreen
                 exitFullscreen();
@@ -3130,15 +3200,108 @@
             }, 300);
         });
 
-        // Prevent zoom on double tap for mobile controls
+        // Double tap to exit fullscreen functionality
         let lastTouchEnd = 0;
+        let tapCount = 0;
         document.addEventListener('touchend', (e) => {
             const now = (new Date()).getTime();
+            
+            // Double tap detection for fullscreen exit
             if (now - lastTouchEnd <= 300) {
-                e.preventDefault();
+                tapCount++;
+                if (tapCount === 2 && (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
+                    // Double tap detected while in fullscreen - exit fullscreen
+                    exitFullscreen();
+                    
+                    // Show feedback
+                    const feedback = document.createElement('div');
+                    feedback.textContent = 'Fullscreen Exited';
+                    feedback.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: rgba(0, 0, 0, 0.8);
+                        color: white;
+                        padding: 10px 20px;
+                        border-radius: 10px;
+                        z-index: 10003;
+                        font-size: 16px;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(feedback);
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(feedback);
+                    }, 1500);
+                    
+                    tapCount = 0;
+                } else {
+                    // Prevent zoom on double tap for regular controls
+                    e.preventDefault();
+                }
+            } else {
+                tapCount = 1;
             }
+            
+            // Reset tap count after delay
+            setTimeout(() => {
+                tapCount = 0;
+            }, 400);
+            
             lastTouchEnd = now;
         }, false);
+
+        // Escape key to exit fullscreen
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
+                exitFullscreen();
+            }
+        });
+
+        // Add visual feedback for fullscreen entry
+        function showFullscreenHint() {
+            const hint = document.createElement('div');
+            hint.textContent = 'Double-tap screen or press × to exit fullscreen';
+            hint.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 10px;
+                z-index: 10003;
+                font-size: 14px;
+                pointer-events: none;
+                animation: slideUp 0.5s ease-out;
+            `;
+            document.body.appendChild(hint);
+            
+            setTimeout(() => {
+                hint.style.animation = 'slideDown 0.5s ease-out';
+                setTimeout(() => {
+                    if (document.body.contains(hint)) {
+                        document.body.removeChild(hint);
+                    }
+                }, 500);
+            }, 3000);
+        }
+
+        // Add CSS for hint animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from { transform: translate(-50%, 100%); opacity: 0; }
+                to { transform: translateX(-50%); opacity: 1; }
+            }
+            @keyframes slideDown {
+                from { transform: translateX(-50%); opacity: 1; }
+                to { transform: translate(-50%, 100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html> 
